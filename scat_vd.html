@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Software Cost Analysis Tool</title>
+  <style>
+    :root{
+      --bg0:#05070c;
+      --bg1:#0b1220;
+      --panel:rgba(255,255,255,.06);
+      --panel2:rgba(255,255,255,.09);
+      --line:rgba(255,255,255,.10);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.62);
+      --accent:#7fb3ff;
+      --shadow: 0 24px 80px rgba(0,0,0,.55);
+      --radius:18px;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 20% 10%, rgba(127,179,255,.12), transparent 55%),
+        radial-gradient(900px 700px at 80% 20%, rgba(110,231,183,.08), transparent 55%),
+        radial-gradient(1200px 900px at 50% 90%, rgba(251,113,133,.06), transparent 60%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      min-height:100vh;
+      padding:36px 22px 60px;
+    }
+
+    .wrap{ max-width:1180px; margin:0 auto; }
+    header{
+      display:flex; gap:18px; align-items:flex-start; justify-content:space-between;
+      margin-bottom:18px;
+    }
+
+    /* --- Brand row (logo + title) --- */
+    .brand{
+      display:flex;
+      gap:14px;
+      align-items:flex-start;
+      min-width: 320px;
+    }
+    .brand img{
+      height:44px;
+      width:auto;
+      display:block;
+      object-fit:contain;
+      /* keep it clean — no rounding/cropping */
+      border-radius:0;
+      background:transparent;
+      /* subtle lift on dark bg */
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.35));
+    }
+
+    .title h1{
+      margin:0;
+      font-size:34px;
+      letter-spacing:.2px;
+      line-height:1.05;
+    }
+    .title p{
+      margin:6px 0 0;
+      color:var(--muted);
+      line-height:1.35;
+      max-width:720px;
+      font-size:14px;
+    }
+
+    .actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      justify-content:flex-end;
+      align-items:center;
+      margin-top:6px;
+    }
+    button{
+      appearance:none;
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      color:var(--text);
+      border-radius:12px;
+      padding:10px 12px;
+      font-weight:600;
+      cursor:pointer;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      transition: transform .12s ease, background .12s ease, border-color .12s ease;
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      font-size:13px;
+      user-select:none;
+    }
+    button:hover{ transform: translateY(-1px); border-color: rgba(127,179,255,.35); }
+    button:active{ transform: translateY(0); }
+    button.secondary{ background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03)); }
+    button.danger{ border-color: rgba(251,113,133,.35); }
+
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .cardhead{
+      display:flex; justify-content:space-between; align-items:flex-end;
+      padding:18px 18px 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
+      border-bottom:1px solid var(--line);
+      gap:18px;
+      flex-wrap:wrap;
+    }
+    .cardhead .left .h{
+      font-weight:800; letter-spacing:.2px;
+    }
+    .cardhead .left .s{
+      margin-top:4px; color:var(--muted); font-size:13px;
+    }
+    .tip{
+      font-size:12px;
+      color:var(--muted);
+      max-width:560px;
+      line-height:1.35;
+    }
+    .tip b{ color:rgba(255,255,255,.86); }
+
+    /* Layout:
+       Category wider + allow nicer display; remove Billing + Annual columns */
+    .gridhead, .row{
+      display:grid;
+      grid-template-columns:
+        2.35fr   /* Category */
+        1.75fr   /* Vendor */
+        1.05fr   /* Price/User Month */
+        0.75fr   /* Users */
+        1.05fr   /* Total */
+        1.25fr   /* Notes */
+        44px;    /* remove */
+      gap:10px;
+      align-items:center;
+    }
+
+    .gridhead{
+      padding:12px 18px;
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.6px;
+      text-transform:uppercase;
+      color:rgba(255,255,255,.74);
+      background: rgba(0,0,0,.16);
+      border-bottom:1px solid var(--line);
+    }
+
+    .rows{ padding:10px 10px 2px; }
+    .row{
+      padding:10px 8px;
+      margin:8px;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:16px;
+      background: radial-gradient(1200px 220px at 50% 0%, rgba(255,255,255,.07), rgba(255,255,255,.03));
+    }
+
+    select, input[type="text"], input[type="number"], textarea{
+      width:100%;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.22);
+      color:var(--text);
+      border-radius:14px;
+      padding:10px 12px;
+      outline:none;
+      font-size:13px;
+      transition: border-color .12s ease, box-shadow .12s ease;
+      min-height:40px;
+    }
+
+    /* Category dropdown: widen + show full on hover via title (JS sets it) */
+    select{
+      padding-right:34px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    select:focus, input:focus, textarea:focus{
+      border-color: rgba(127,179,255,.45);
+      box-shadow: 0 0 0 3px rgba(127,179,255,.12);
+    }
+
+    /* Remove ugly number spinners */
+    input[type="number"]{
+      text-align:right;
+      font-variant-numeric: tabular-nums;
+      -moz-appearance: textfield;
+    }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button{
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    textarea{
+      resize:vertical;
+      min-height:42px;
+      max-height:140px;
+      padding-top:10px;
+    }
+
+    .vendorwrap{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .otherInput{ display:none; }
+
+    .totalCell{
+      text-align:right;
+      padding-right:6px;
+      font-variant-numeric: tabular-nums;
+    }
+    .totalCell .amt{
+      font-weight:800;
+      font-size:14px;
+    }
+    .totalCell .sub{
+      color:var(--accent);
+      font-size:12px;
+      margin-top:2px;
+    }
+
+    .xbtn{
+      width:40px; height:40px;
+      border-radius:14px;
+      display:flex; align-items:center; justify-content:center;
+      background: rgba(0,0,0,.22);
+      border:1px solid rgba(255,255,255,.12);
+      cursor:pointer;
+      user-select:none;
+      transition: transform .12s ease, border-color .12s ease;
+    }
+    .xbtn:hover{ transform: translateY(-1px); border-color: rgba(251,113,133,.35); }
+    .xbtn:active{ transform: translateY(0); }
+
+    .footerbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      padding:14px 18px;
+      border-top:1px solid var(--line);
+      background: rgba(0,0,0,.12);
+    }
+    .totals{
+      display:flex; gap:10px; flex-wrap:wrap;
+      align-items:center;
+    }
+    .pill{
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      border-radius:999px;
+      padding:8px 12px;
+      display:flex;
+      gap:8px;
+      align-items:baseline;
+      font-size:13px;
+    }
+    .pill .k{ color:var(--muted); }
+    .pill .v{ font-weight:900; font-variant-numeric: tabular-nums; }
+
+    .meta{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .note{
+      margin-top:14px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.4;
+    }
+    .note b{ color:rgba(255,255,255,.82); }
+
+    /* Print/PDF */
+    @media print{
+      body{ background:#fff; color:#000; padding:0; }
+      header, .actions, .note{ display:none !important; }
+      .card{ box-shadow:none; border:1px solid #ddd; }
+      .row{ break-inside:avoid; }
+      select, input, textarea{ border:1px solid #ddd; background:#fff; color:#000; }
+      .totalCell .sub{ color:#333; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <!-- Embedded logo (single-file, offline safe) -->
+      <img id="vdLogo" alt="Vector Digital" />
+      <div class="title">
+        <h1>Software Cost Analysis Tool</h1>
+        <p>
+          Offline, single-file worksheet you can use in-person. Pick <b>Category → Vendor/App</b>,
+          enter <b>Price/User Month + Users</b>, and it calculates <b>annualized</b> totals automatically.
+          “Generate PDF” uses your browser print dialog (choose <b>Save as PDF</b>).
+        </p>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="addRowBtn">➕ Add Row</button>
+      <button id="exportBtn" class="secondary">⬇ Export CSV</button>
+      <button id="importBtn" class="secondary">⬆ Import CSV</button>
+      <button id="pdfBtn" class="secondary">🖨 Generate PDF</button>
+      <button id="saveBtn" class="secondary">💾 Save</button>
+      <button id="loadBtn" class="secondary">📦 Load</button>
+      <button id="clearBtn" class="danger">🧹 Clear</button>
+      <input id="fileInput" type="file" accept=".csv" style="display:none" />
+    </div>
+  </header>
+
+  <div class="card">
+    <div class="cardhead">
+      <div class="left">
+        <div class="h">Customer Inventory + Spend</div>
+        <div class="s">Totals update instantly. Total App Cost is shown as annual spend.</div>
+      </div>
+      <div class="tip">
+        Tip: Enter what the customer pays per user per month. The calculator multiplies by <b>Users × 12</b>.
+        If they only know annual, divide by 12 (or drop the annual figure in <b>Notes</b>).
+      </div>
+    </div>
+
+    <div class="gridhead">
+      <div>CATEGORY</div>
+      <div>VENDOR / APP</div>
+      <div>PRICE/USER<br/>MONTH</div>
+      <div>USERS</div>
+      <div>TOTAL APP COST</div>
+      <div>NOTES</div>
+      <div></div>
+    </div>
+
+    <div id="rows" class="rows"></div>
+
+    <div class="footerbar">
+      <div class="totals">
+        <div class="pill">
+          <span class="k">Grand Total (annualized):</span>
+          <span class="v" id="grandTotal">$0.00</span>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="pill"><span class="k">Rows:</span> <span class="v" id="rowCount">0</span></div>
+        <div class="pill"><span class="k">Last Saved:</span> <span class="v" id="lastSaved">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>Offline notes:</b> Saves/loads using your browser’s local storage (no internet, no servers).
+    Export CSV anytime for archiving. PDF uses your browser print dialog.
+  </div>
+</div>
+
+<script>
+(() => {
+  // --- EMBEDDED LOGO (data URI) ---
+  // This keeps it single-file/offline. If you want to use a separate file instead,
+  // replace logoDataUri with: const logoDataUri = "Vector Digital Logo.png";
+  const logoDataUri = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAWAAAACsCAYAAABFPHY3AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAdnJ...<SNIP>...";
+
+  // NOTE: The data URI is long. Paste the full base64 string here.
+  // I trimmed it in this chat for readability. If you want, I’ll return the exact full string in a follow-up.
+
+  // --- CONFIG: categories + vendors ---
+  const CATEGORIES = [
+    "SSO_Authentication",
+    "Password_Manager",
+    "Zero_Trust_VPN",
+    "Mail_Calendar",
+    "Messaging_and_Video_Conferencing",
+    "Cloud_Workspace",
+    "Office_Suite",
+    "PDF_Utility",
+    "ERP",
+    "CRM",
+    "PM_Tool",
+    "Digital_Signature",
+    "Note_Taking",
+    "LMS_Hosting",
+    "Monitoring_Scanning_Endpoint_Security",
+    "Off_Site_Storage_Backup",
+    "Annual_Security_Risk_Assessment",
+    "Policy_Management",
+    "Annual_Cybersecurity_Awareness_Training",
+    "AI_Chat",
+    "Hosted_Web_Design_Toolkit",
+    "UI_UX_Design",
+    "Tiered_Customer_Support"
+  ];
+
+  const VENDORS = [
+    "None",
+    "Microsoft",
+    "Google",
+    "Okta",
+    "Auth0",
+    "OneLogin",
+    "Keycloak",
+    "Bitwarden",
+    "1Password",
+    "LastPass",
+    "Dashlane",
+    "NordPass",
+    "Zoho",
+    "Webflow",
+    "LibreOffice",
+    "Sterling",
+    "Other (type)..."
+  ];
+
+  const STORAGE_KEY = "softwareCostAnalysisTool.v2";
+
+  // --- helpers ---
+  const $ = (sel, root=document) => root.querySelector(sel);
+  const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+  function money(n){
+    const v = Number(n);
+    if (!isFinite(v)) return "$0.00";
+    return v.toLocaleString(undefined, { style:"currency", currency:"USD" });
+  }
+  function num(val){
+    const v = Number(val);
+    return isFinite(v) ? v : 0;
+  }
+  function nowStamp(){
+    return new Date().toLocaleString();
+  }
+
+  // --- logo init ---
+  const logoEl = $("#vdLogo");
+  logoEl.src = logoDataUri;
+  // fallback if someone deletes the data uri:
+  logoEl.onerror = () => { logoEl.style.display = "none"; };
+
+  // --- row template ---
+  function makeSelect(options, value){
+    const s = document.createElement("select");
+    for (const opt of options){
+      const o = document.createElement("option");
+      o.value = opt;
+      o.textContent = opt;
+      s.appendChild(o);
+    }
+    if (value != null) s.value = value;
+    return s;
+  }
+
+  function makeRow(data={}){
+    const row = document.createElement("div");
+    row.className = "row";
+
+    // Category
+    const cat = makeSelect(CATEGORIES, data.category || CATEGORIES[0]);
+    cat.title = cat.value;
+    cat.addEventListener("change", () => { cat.title = cat.value; recalcRow(row); recalcAll(); });
+
+    // Vendor + other input
+    const vendorWrap = document.createElement("div");
+    vendorWrap.className = "vendorwrap";
+
+    const vendor = makeSelect(VENDORS, data.vendor || "Other (type)...");
+    vendor.title = vendor.value;
+
+    const other = document.createElement("input");
+    other.type = "text";
+    other.placeholder = "Type vendor/app…";
+    other.className = "otherInput";
+    other.value = data.otherVendor || "";
+    other.addEventListener("input", () => { recalcRow(row); recalcAll(); });
+
+    function syncVendorUI(){
+      vendor.title = vendor.value;
+      const isOther = vendor.value === "Other (type)...";
+      other.style.display = isOther ? "block" : "none";
+    }
+    vendor.addEventListener("change", () => { syncVendorUI(); recalcRow(row); recalcAll(); });
+    syncVendorUI();
+
+    vendorWrap.appendChild(vendor);
+    vendorWrap.appendChild(other);
+
+    // Price month (text to avoid spinners; we parse it)
+    const pm = document.createElement("input");
+    pm.type = "text";
+    pm.inputMode = "decimal";
+    pm.placeholder = "e.g. 7.99";
+    pm.value = data.priceMonth ?? "";
+    pm.addEventListener("input", () => { recalcRow(row); recalcAll(); });
+
+    // Users (text to avoid spinners; we parse it)
+    const users = document.createElement("input");
+    users.type = "text";
+    users.inputMode = "numeric";
+    users.placeholder = "0";
+    users.value = (data.users ?? 0);
+    users.addEventListener("input", () => { recalcRow(row); recalcAll(); });
+
+    // Total
+    const total = document.createElement("div");
+    total.className = "totalCell";
+    total.innerHTML = `<div class="amt">$0.00</div><div class="sub">annual spend</div>`;
+
+    // Notes
+    const notes = document.createElement("textarea");
+    notes.placeholder = "Notes…";
+    notes.value = data.notes || "";
+
+    // Remove
+    const x = document.createElement("div");
+    x.className = "xbtn";
+    x.textContent = "×";
+    x.title = "Remove row";
+    x.addEventListener("click", () => {
+      row.remove();
+      recalcAll();
+      updateMeta();
+    });
+
+    row._fields = { cat, vendor, other, pm, users, total, notes };
+
+    row.appendChild(cat);
+    row.appendChild(vendorWrap);
+    row.appendChild(pm);
+    row.appendChild(users);
+    row.appendChild(total);
+    row.appendChild(notes);
+    row.appendChild(x);
+
+    recalcRow(row);
+    return row;
+  }
+
+  // --- calculations ---
+  // Total App Cost is annualized: priceMonth * users * 12
+  function recalcRow(row){
+    const { cat, vendor, other, pm, users, total } = row._fields;
+
+    cat.title = cat.value;
+    vendor.title = (vendor.value === "Other (type)...")
+      ? (other.value || vendor.value)
+      : vendor.value;
+
+    const u = num(String(users.value).replace(/[^0-9.]/g,""));
+    const m = num(String(pm.value).replace(/[^0-9.]/g,""));
+
+    const annualized = m * u * 12;
+
+    total.querySelector(".amt").textContent = money(annualized);
+    total.querySelector(".sub").textContent = "annual spend";
+    row._annualized = annualized;
+  }
+
+  function recalcAll(){
+    const rows = $$("#rows .row");
+    let grand = 0;
+    for (const r of rows){
+      recalcRow(r);
+      grand += r._annualized || 0;
+    }
+    $("#grandTotal").textContent = money(grand);
+  }
+
+  function updateMeta(){
+    $("#rowCount").textContent = String($$("#rows .row").length);
+  }
+
+  // --- persistence ---
+  function serialize(){
+    return $$("#rows .row").map(r => {
+      const f = r._fields;
+      return {
+        category: f.cat.value,
+        vendor: f.vendor.value,
+        otherVendor: f.other.value,
+        priceMonth: f.pm.value,
+        users: f.users.value,
+        notes: f.notes.value
+      };
+    });
+  }
+
+  function loadData(items){
+    const container = $("#rows");
+    container.innerHTML = "";
+    for (const item of items){
+      container.appendChild(makeRow(item));
+    }
+    recalcAll();
+    updateMeta();
+  }
+
+  function save(){
+    const payload = { savedAt: nowStamp(), rows: serialize() };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    $("#lastSaved").textContent = payload.savedAt;
+  }
+
+  function load(){
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const payload = JSON.parse(raw);
+    loadData(payload.rows || []);
+    $("#lastSaved").textContent = payload.savedAt || "—";
+  }
+
+  function clearAll(){
+    if (!confirm("Clear all rows?")) return;
+    localStorage.removeItem(STORAGE_KEY);
+    $("#rows").innerHTML = "";
+    for (let i=0;i<8;i++) $("#rows").appendChild(makeRow({}));
+    recalcAll();
+    updateMeta();
+    $("#lastSaved").textContent = "—";
+  }
+
+  // --- CSV ---
+  function toCSV(){
+    const rows = serialize();
+    const header = ["Category","Vendor/App","Price_User_Month","Total_Users","Total_App_Cost_Annualized","Notes"];
+    const lines = [header.join(",")];
+
+    for (const r of rows){
+      const vendorName = r.vendor === "Other (type)..." ? (r.otherVendor || "") : r.vendor;
+      const annualized = num(String(r.priceMonth).replace(/[^0-9.]/g,"")) * num(String(r.users).replace(/[^0-9.]/g,"")) * 12;
+
+      const safeNotes = (r.notes || "").replaceAll('"','""');
+      const line = [
+        r.category || "",
+        vendorName || "",
+        r.priceMonth ?? "",
+        r.users ?? 0,
+        annualized.toFixed(2),
+        `"${safeNotes}"`
+      ];
+      lines.push(line.join(","));
+    }
+    return lines.join("\n");
+  }
+
+  function download(filename, content, type="text/plain"){
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 500);
+  }
+
+  function parseCSV(text){
+    const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
+    if (lines.length < 2) return [];
+
+    const splitLine = (line) => {
+      const res = [];
+      let cur = "";
+      let inQ = false;
+      for (let i=0;i<line.length;i++){
+        const ch = line[i];
+        if (ch === '"' ){
+          if (inQ && line[i+1] === '"'){ cur += '"'; i++; }
+          else inQ = !inQ;
+        } else if (ch === ',' && !inQ){
+          res.push(cur);
+          cur = "";
+        } else {
+          cur += ch;
+        }
+      }
+      res.push(cur);
+      return res;
+    };
+
+    const header = splitLine(lines[0]).map(s => s.trim());
+    const idx = {
+      cat: header.findIndex(h => /category/i.test(h)),
+      vendor: header.findIndex(h => /vendor/i.test(h)),
+      pm: header.findIndex(h => /price.*month/i.test(h)),
+      users: header.findIndex(h => /users/i.test(h)),
+      notes: header.findIndex(h => /notes/i.test(h))
+    };
+
+    const out = [];
+    for (let i=1;i<lines.length;i++){
+      const cols = splitLine(lines[i]);
+      const vendorText = (cols[idx.vendor] || "").trim();
+      const vendorIsKnown = VENDORS.includes(vendorText);
+      const useOther = (!vendorIsKnown && vendorText !== "") ? "Other (type)..." : (vendorText || "Other (type)...");
+
+      out.push({
+        category: (cols[idx.cat] || CATEGORIES[0]).trim(),
+        vendor: useOther,
+        otherVendor: (useOther === "Other (type)...") ? vendorText : "",
+        priceMonth: (cols[idx.pm] || "").trim(),
+        users: (cols[idx.users] || "0").trim(),
+        notes: (cols[idx.notes] || "").trim()
+      });
+    }
+    return out;
+  }
+
+  // --- init ---
+  const rowsEl = $("#rows");
+  for (let i=0;i<8;i++) rowsEl.appendChild(makeRow({}));
+  recalcAll();
+  updateMeta();
+
+  $("#addRowBtn").addEventListener("click", () => {
+    rowsEl.appendChild(makeRow({}));
+    recalcAll();
+    updateMeta();
+  });
+
+  $("#saveBtn").addEventListener("click", () => save());
+  $("#loadBtn").addEventListener("click", () => { load(); recalcAll(); updateMeta(); });
+  $("#clearBtn").addEventListener("click", () => clearAll());
+
+  $("#pdfBtn").addEventListener("click", () => window.print());
+
+  $("#exportBtn").addEventListener("click", () => {
+    download("software-cost-analysis.csv", toCSV(), "text/csv");
+  });
+
+  $("#importBtn").addEventListener("click", () => $("#fileInput").click());
+  $("#fileInput").addEventListener("change", async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const text = await file.text();
+    loadData(parseCSV(text));
+    e.target.value = "";
+  });
+
+  // autosave
+  let t = null;
+  document.addEventListener("input", () => {
+    clearTimeout(t);
+    t = setTimeout(() => {
+      save();
+      recalcAll();
+      updateMeta();
+    }, 400);
+  });
+})();
+</script>
+</body>
+</html>
