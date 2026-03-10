@@ -388,15 +388,7 @@
       flex-shrink:0;
     }
 
-    /* Print/PDF */
-    @media print{
-      body{ background:#fff; color:#000; padding:0; }
-      header, .actions, .note, .filterbar, .summary-grid, .chart-section, .vs-section{ display:none !important; }
-      .card{ box-shadow:none; border:1px solid #ddd; }
-      .row{ break-inside:avoid; }
-      select, input, textarea{ border:1px solid #ddd; background:#fff; color:#1a2744; }
-      .totalCell .sub{ color:#2c5282; }
-    }
+    /* Print/PDF - handled via quote overlay */
     /* --- Vector Stack Comparison --- */
     .vs-section{
       margin-top:16px;
@@ -524,32 +516,261 @@
       color:var(--accent);
       font-weight:600;
     }
+
+    /* --- Additional Services --- */
+    .addl-section{
+      margin-top:16px;
+    }
+    .addl-title{
+      font-size:22px;
+      font-weight:800;
+      letter-spacing:.2px;
+      margin-bottom:12px;
+    }
+    .addl-grid{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .addl-head{
+      display:grid;
+      grid-template-columns: 1fr 2fr .6fr 1fr .4fr;
+      gap:12px;
+      padding:14px 18px;
+      font-size:13px;
+      font-weight:800;
+      letter-spacing:.5px;
+      text-transform:uppercase;
+      color:var(--muted);
+      background:#f0f4f8;
+      border-bottom:1px solid var(--line);
+      align-items:center;
+    }
+    .addl-row{
+      display:grid;
+      grid-template-columns: 1fr 2fr .6fr 1fr .4fr;
+      gap:12px;
+      padding:12px 18px;
+      align-items:center;
+      border-bottom:1px solid var(--line);
+    }
+    .addl-row:last-child{ border-bottom:none; }
+    .addl-row .addl-name{
+      font-weight:700;
+      font-size:15px;
+    }
+    .addl-row .addl-desc{
+      font-size:14px;
+      color:var(--muted);
+      line-height:1.4;
+    }
+    .addl-row .addl-price-wrap{
+      display:flex;
+      align-items:center;
+      gap:4px;
+    }
+    .addl-row .addl-price-wrap input{
+      width:80px;
+      text-align:right;
+      font-weight:700;
+      font-size:15px;
+      min-height:38px;
+      padding:6px 10px;
+    }
+    .addl-row .addl-unit{
+      font-size:12px;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .addl-row .addl-total{
+      font-weight:800;
+      font-size:15px;
+      text-align:right;
+      font-variant-numeric:tabular-nums;
+    }
+    .addl-row .addl-total .addl-total-sub{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:400;
+    }
+    .addl-check{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .addl-check input[type="checkbox"]{
+      width:20px;
+      height:20px;
+      cursor:pointer;
+      accent-color:var(--accent);
+    }
+    .addl-footer{
+      display:flex;
+      justify-content:flex-end;
+      padding:14px 18px;
+      background:#f0f4f8;
+      border-top:1px solid var(--line);
+      gap:8px;
+      align-items:baseline;
+    }
+    .addl-footer .addl-footer-label{
+      font-size:14px;
+      color:var(--muted);
+      font-weight:600;
+    }
+    .addl-footer .addl-footer-val{
+      font-size:18px;
+      font-weight:900;
+      font-variant-numeric:tabular-nums;
+    }
+
+    /* --- PDF Quote Styles --- */
+    .quote-overlay{
+      display:none;
+      position:fixed;
+      top:0; left:0; right:0; bottom:0;
+      background:rgba(0,0,0,.4);
+      z-index:9999;
+      overflow-y:auto;
+      padding:20px;
+    }
+    .quote-overlay.active{ display:block; }
+    .quote-page{
+      background:#fff;
+      max-width:900px;
+      margin:0 auto 30px;
+      padding:50px 60px;
+      box-shadow:0 8px 40px rgba(0,0,0,.15);
+      border-radius:4px;
+      color:#1a2744;
+      font-size:14px;
+      line-height:1.5;
+    }
+    .quote-page h2{
+      font-size:24px;
+      margin:30px 0 10px;
+      color:#1a2744;
+      border-bottom:2px solid #e8eef8;
+      padding-bottom:8px;
+    }
+    .quote-page h3{
+      font-size:18px;
+      margin:20px 0 8px;
+      color:#2c5282;
+    }
+    .quote-page table{
+      width:100%;
+      border-collapse:collapse;
+      margin:10px 0 20px;
+      font-size:14px;
+    }
+    .quote-page th{
+      text-align:left;
+      padding:10px 12px;
+      background:#f0f4f8;
+      border-bottom:2px solid #d0d7e2;
+      font-weight:700;
+      color:#5a6a85;
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.4px;
+    }
+    .quote-page td{
+      padding:8px 12px;
+      border-bottom:1px solid #e8eef8;
+    }
+    .quote-page .q-right{ text-align:right; }
+    .quote-page .q-bold{ font-weight:700; }
+    .quote-page .q-accent{ color:#2c5282; }
+    .quote-page .q-green{ color:#16a34a; font-weight:700; }
+    .quote-page .q-muted{ color:#5a6a85; }
+    .quote-page .q-gap-item{
+      color:#dc2626;
+      font-weight:600;
+    }
+    .quote-page .q-total-row td{
+      border-top:2px solid #1a2744;
+      font-weight:900;
+      font-size:16px;
+      padding-top:12px;
+    }
+    .quote-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      margin-bottom:20px;
+    }
+    .quote-header-left h1{
+      font-size:28px;
+      margin:0;
+    }
+    .quote-header-left p{
+      color:#5a6a85;
+      margin:4px 0 0;
+    }
+    .quote-header-right{
+      text-align:right;
+      color:#5a6a85;
+      font-size:13px;
+      line-height:1.6;
+    }
+    .quote-logo{
+      height:50px;
+      margin-bottom:10px;
+    }
+    .quote-actions{
+      position:sticky;
+      top:20px;
+      display:flex;
+      gap:10px;
+      justify-content:center;
+      margin-bottom:20px;
+      z-index:10000;
+    }
+    .quote-actions button{
+      padding:12px 24px;
+      font-size:16px;
+      border-radius:12px;
+      font-weight:700;
+      box-shadow:0 4px 16px rgba(0,0,0,.2);
+    }
+
+    @media print{
+      body{ background:#fff; color:#000; padding:0; }
+      .wrap{ display:none !important; }
+      .quote-overlay{ display:block !important; position:static; background:none; padding:0; }
+      .quote-actions{ display:none !important; }
+      .quote-page{ box-shadow:none; padding:30px 40px; margin:0; max-width:none; }
+      .quote-page{ break-inside:avoid; page-break-inside:avoid; }
+      .quote-page h2{ break-after:avoid; }
+      .quote-page table{ break-inside:avoid; }
+    }
   </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <div class="brand">
+    <div class=”brand”>
       <!-- Embedded logo (single-file, offline safe) -->
-      <img id="vdLogo" alt="Vector Digital" />
-      <div class="title">
-        <h1>Software Cost Analysis Tool</h1>
+      <img id=”vdLogo” alt=”Vector Digital” />
+      <div class=”title”>
+        <h1>VectorStack&trade; Cost Analysis</h1>
         <p>
-          Offline, single-file worksheet you can use in-person. Pick <b>Category → Vendor/App</b>,
-          enter <b>Price/User Month + Users</b>, and it calculates <b>annualized</b> totals automatically.
-          “Generate PDF” uses your browser print dialog (choose <b>Save as PDF</b>).
+          Analyze your customer's current software spend and generate a personalized VectorStack quote.
         </p>
       </div>
     </div>
 
-    <div class="actions">
-      <button id="exportBtn" class="secondary">⬇ Export CSV</button>
-      <button id="importBtn" class="secondary">⬆ Import CSV</button>
-      <button id="pdfBtn" class="secondary">🖨 Generate PDF</button>
-      <button id="saveBtn" class="secondary">💾 Save</button>
-      <button id="loadBtn" class="secondary">📦 Load</button>
-      <button id="clearBtn" class="danger">🧹 Clear</button>
-      <input id="fileInput" type="file" accept=".csv" style="display:none" />
+    <div class=”actions”>
+      <button id=”exportBtn” class=”secondary”>&#11015; Export CSV</button>
+      <button id=”importBtn” class=”secondary”>&#11014; Import CSV</button>
+      <button id=”pdfBtn” class=”secondary”>&#128196; Generate Quote</button>
+      <button id=”saveBtn” class=”secondary”>&#128190; Save</button>
+      <button id=”loadBtn” class=”secondary”>&#128230; Load</button>
+      <button id=”clearBtn” class=”danger”>&#128465; Clear</button>
+      <input id=”fileInput” type=”file” accept=”.csv” style=”display:none” />
     </div>
   </header>
 
@@ -557,11 +778,6 @@
     <div class="cardhead">
       <div class="left">
         <div class="h">Customer Inventory + Spend</div>
-        <div class="s">Totals update instantly. Total App Cost is shown as annual spend.</div>
-      </div>
-      <div class="tip">
-        Tip: Enter what the customer pays per user per month. The calculator multiplies by <b>Users × 12</b>.
-        If they only know annual, divide by 12 (or drop the annual figure in <b>Notes</b>).
       </div>
     </div>
 
@@ -591,7 +807,6 @@
         </div>
       </div>
       <div class="meta">
-        <div class="pill"><span class="k">Rows:</span> <span class="v" id="rowCount">0</span></div>
         <div class="pill"><span class="k">Last Saved:</span> <span class="v" id="lastSaved">—</span></div>
       </div>
     </div>
@@ -670,10 +885,34 @@
     <div class="vs-breakdown" id="vsBreakdown"></div>
   </div>
 
-  <div class="note">
-    <b>Offline notes:</b> Saves/loads using your browser’s local storage (no internet, no servers).
-    Export CSV anytime for archiving. PDF uses your browser print dialog.
+  <!-- Additional Services -->
+  <div class="addl-section" id="addlSection">
+    <div class="addl-title">Additional Services</div>
+    <div class="addl-grid">
+      <div class="addl-head">
+        <div>Include</div>
+        <div>Service</div>
+        <div>Price</div>
+        <div>Unit</div>
+        <div>Annual Cost</div>
+      </div>
+      <div id="addlRows"></div>
+      <div class="addl-footer">
+        <span class="addl-footer-label">Additional Services Total:</span>
+        <span class="addl-footer-val" id="addlTotal">$0.00</span>
+      </div>
+    </div>
   </div>
+
+</div>
+
+<!-- Quote Overlay (for PDF generation) -->
+<div class="quote-overlay" id="quoteOverlay">
+  <div class="quote-actions">
+    <button onclick="window.print()">&#128424; Print / Save as PDF</button>
+    <button class="secondary" onclick="document.getElementById('quoteOverlay').classList.remove('active')">&#10005; Close</button>
+  </div>
+  <div id="quoteContent"></div>
 </div>
 
 
@@ -873,7 +1112,7 @@
   }
 
   function updateMeta(){
-    $("#rowCount").textContent = String($$("#rows .row").length);
+    // meta updates (e.g. last-saved timestamp) handled elsewhere
   }
 
   // --- Filter / Search ---
@@ -1119,6 +1358,7 @@
     const container = $("#rows");
     container.innerHTML = "";
     for (const cat of CATEGORIES) container.appendChild(makeRow(cat, {}));
+    buildAdditionalServicesUI();
     recalcAll();
     updateMeta();
     $("#lastSaved").textContent = "—";
@@ -1312,9 +1552,7 @@
       $("#vsBreakdown").innerHTML =
         `<div class="vs-bk-title">Managed Plan Breakdown</div>` +
         `<div class="vs-bk-row"><span class="vs-bk-pkg">${m.tier}</span>` +
-        `<span class="vs-bk-cost">${money(m.perUser)}/user/mo &times; ${users} users &times; 12 mo = ${money(m.annual)}/yr</span></div>` +
-        `<p style="margin:10px 0 0;font-size:14px;color:var(--muted);">` +
-        `Includes all packages: Identity &amp; Access, Productivity &amp; Collaboration, Business Operations, Security &amp; Monitoring, and Support.</p>`;
+        `<span class="vs-bk-cost">${money(m.perUser)}/user/mo &times; ${users} users &times; 12 mo = ${money(m.annual)}/yr</span></div>`;
     } else {
       const mod = calcVSModular(users, activePackages);
       vsAnnual = mod.annual;
@@ -1340,10 +1578,14 @@
           ? `<p style="margin:10px 0 0;font-size:14px;color:var(--muted);">Enter cost data above to see which modular packages apply.</p>` : "");
     }
 
-    $("#vsVectorAnnual").textContent = money(vsAnnual);
+    // Include additional services
+    const addlTotal = (typeof recalcAddlServices === "function") ? recalcAddlServices() : 0;
+    const totalVS = vsAnnual + addlTotal;
+
+    $("#vsVectorAnnual").textContent = money(totalVS);
 
     // Savings
-    const savings = grand - vsAnnual;
+    const savings = grand - totalVS;
     const pct = grand > 0 ? ((savings / grand) * 100).toFixed(1) : "0.0";
     $("#vsSavingsAmt").textContent = money(savings);
     const pctEl = $("#vsSavingsPct");
@@ -1360,9 +1602,277 @@
     }
   }
 
+  // --- Additional Services ---
+  const ADDITIONAL_SERVICES = [
+    { id: "secRisk", name: "Security Risk Assessment", desc: "Comprehensive audit with vulnerability scanning, risk scoring, and remediation roadmap.", defaultPrice: 3500, unit: "per year", perUser: false },
+    { id: "policyMgmt", name: "Policy Management", desc: "IT and cybersecurity policy creation, review, and ongoing maintenance.", defaultPrice: 2000, unit: "per year", perUser: false },
+    { id: "cyberTrain", name: "Cybersecurity Awareness Training", desc: "Interactive modules, phishing simulations, and compliance tracking for your team.", defaultPrice: 10, unit: "per user / year", perUser: true },
+    { id: "aiChat", name: "Private AI Chat Assistant", desc: "Privately hosted AI assistant. No data leaves your infrastructure. Custom knowledge base.", defaultPrice: 15, unit: "per user / mo", perUser: true, monthly: true }
+  ];
+
+  function buildAdditionalServicesUI(){
+    const container = $("#addlRows");
+    container.innerHTML = "";
+    for (const svc of ADDITIONAL_SERVICES){
+      const row = document.createElement("div");
+      row.className = "addl-row";
+      row.dataset.svcId = svc.id;
+
+      const checkWrap = document.createElement("div");
+      checkWrap.className = "addl-check";
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.id = "addl_cb_" + svc.id;
+      cb.addEventListener("change", () => { recalcAddlServices(); updateVectorComparison(); });
+      checkWrap.appendChild(cb);
+
+      const nameDiv = document.createElement("div");
+      nameDiv.innerHTML = `<div class="addl-name">${svc.name}</div><div class="addl-desc">${svc.desc}</div>`;
+
+      const priceWrap = document.createElement("div");
+      priceWrap.className = "addl-price-wrap";
+      const priceInput = document.createElement("input");
+      priceInput.type = "text";
+      priceInput.inputMode = "decimal";
+      priceInput.value = svc.defaultPrice;
+      priceInput.id = "addl_price_" + svc.id;
+      priceInput.addEventListener("input", () => { recalcAddlServices(); updateVectorComparison(); });
+      const dollar = document.createElement("span");
+      dollar.textContent = "$";
+      dollar.style.fontWeight = "700";
+      priceWrap.appendChild(dollar);
+      priceWrap.appendChild(priceInput);
+
+      const unitDiv = document.createElement("div");
+      unitDiv.className = "addl-unit";
+      unitDiv.textContent = svc.unit;
+
+      const totalDiv = document.createElement("div");
+      totalDiv.className = "addl-total";
+      totalDiv.id = "addl_total_" + svc.id;
+      totalDiv.textContent = "$0.00";
+
+      row.appendChild(checkWrap);
+      row.appendChild(nameDiv);
+      row.appendChild(priceWrap);
+      row.appendChild(unitDiv);
+      row.appendChild(totalDiv);
+      container.appendChild(row);
+    }
+  }
+
+  function recalcAddlServices(){
+    const users = getVSMaxUsers();
+    let total = 0;
+    for (const svc of ADDITIONAL_SERVICES){
+      const cb = $("#addl_cb_" + svc.id);
+      const priceInput = $("#addl_price_" + svc.id);
+      const totalEl = $("#addl_total_" + svc.id);
+      const price = num(priceInput.value.replace(/[^0-9.]/g,""));
+
+      let annual = 0;
+      if (cb.checked){
+        if (svc.perUser){
+          if (svc.monthly){
+            annual = price * Math.max(users, 1) * 12;
+          } else {
+            annual = price * Math.max(users, 1);
+          }
+        } else {
+          annual = price;
+        }
+      }
+      totalEl.innerHTML = cb.checked
+        ? `${money(annual)}<div class="addl-total-sub">annual</div>`
+        : `<span style="color:var(--muted)">—</span>`;
+      total += annual;
+    }
+    $("#addlTotal").textContent = money(total);
+    return total;
+  }
+
+  function getAddlServicesTotal(){
+    return recalcAddlServices();
+  }
+
+  function getAddlServicesData(){
+    const users = getVSMaxUsers();
+    const result = [];
+    for (const svc of ADDITIONAL_SERVICES){
+      const cb = $("#addl_cb_" + svc.id);
+      const priceInput = $("#addl_price_" + svc.id);
+      const price = num(priceInput.value.replace(/[^0-9.]/g,""));
+      let annual = 0;
+      if (cb.checked){
+        if (svc.perUser){
+          annual = svc.monthly ? price * Math.max(users, 1) * 12 : price * Math.max(users, 1);
+        } else {
+          annual = price;
+        }
+      }
+      result.push({ ...svc, price, checked: cb.checked, annual });
+    }
+    return result;
+  }
+
+  // --- PDF Quote Generator ---
+  function generateQuote(){
+    const rows = $$("#rows .row");
+    const users = getVSMaxUsers();
+    let currentGrand = 0;
+    const currentItems = [];
+    const gaps = [];
+
+    for (const r of rows){
+      const f = r._fields;
+      const ann = r._annualized || 0;
+      const vendorText = f.vendor.value === "Other (type)..." ? (f.other.value || "Other") : f.vendor.value;
+      const catName = f.cat.value.replace(/_/g, " ");
+      currentGrand += ann;
+
+      if (f.vendor.value === "None" || (!ann && f.vendor.value === "None")){
+        gaps.push(catName);
+      }
+      if (ann > 0){
+        currentItems.push({
+          category: catName,
+          vendor: vendorText,
+          priceMonth: num(String(f.pm.value).replace(/[^0-9.]/g,"")),
+          users: num(String(f.users.value).replace(/[^0-9.]/g,"")),
+          annual: ann
+        });
+      }
+    }
+
+    // VectorStack cost
+    let vsAnnual, vsPlanLabel, vsPlanDetails;
+    if (vsPricingMode === "managed"){
+      const m = calcVSManaged(users);
+      vsAnnual = m.annual;
+      vsPlanLabel = "Managed Plan — " + m.tier;
+      vsPlanDetails = `${money(m.perUser)}/user/mo × ${users} users × 12 months`;
+    } else {
+      const activePackages = getVSActivePackages();
+      const mod = calcVSModular(users, activePackages);
+      vsAnnual = mod.annual;
+      vsPlanLabel = "Modular Packages";
+      vsPlanDetails = mod.packages.map(p => `${p.name}: $${p.rate}/user/mo`).join(", ");
+      if (mod.discount) vsPlanDetails += " (10% multi-package discount applied)";
+    }
+
+    // Additional services
+    const addlData = getAddlServicesData();
+    const addlChecked = addlData.filter(s => s.checked);
+    const addlUnchecked = addlData.filter(s => !s.checked);
+    const addlTotal = addlChecked.reduce((s, a) => s + a.annual, 0);
+
+    // Add unchecked additional services to gaps
+    for (const svc of addlUnchecked){
+      gaps.push(svc.name);
+    }
+
+    const totalVSQuote = vsAnnual + addlTotal;
+    const savings = currentGrand - totalVSQuote;
+    const savingsPct = currentGrand > 0 ? ((savings / currentGrand) * 100).toFixed(1) : "0.0";
+
+    const today = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
+
+    const logoEl = $("#vdLogo");
+    const logoSrc = logoEl.src || "";
+
+    let html = `<div class="quote-page">`;
+
+    // Header
+    html += `<div class="quote-header">
+      <div class="quote-header-left">
+        <img class="quote-logo" src="${logoSrc}" alt="Vector Digital" />
+        <h1>VectorStack&trade; Quote</h1>
+        <p>Prepared ${today}</p>
+      </div>
+      <div class="quote-header-right">
+        Vector Digital<br/>
+        +417-593-7344<br/>
+        merrill.perkins@vectordigital.io<br/>
+        www.vectordigital.io
+      </div>
+    </div>`;
+
+    // Section 1: Current Spend
+    html += `<h2>Current Software Spend</h2>`;
+    if (currentItems.length > 0){
+      html += `<table><tr><th>Category</th><th>Vendor / App</th><th class="q-right">Price/User/Mo</th><th class="q-right">Users</th><th class="q-right">Annual Cost</th></tr>`;
+      for (const item of currentItems){
+        html += `<tr>
+          <td>${item.category}</td>
+          <td>${item.vendor}</td>
+          <td class="q-right">${money(item.priceMonth)}</td>
+          <td class="q-right">${item.users}</td>
+          <td class="q-right q-bold">${money(item.annual)}</td>
+        </tr>`;
+      }
+      html += `<tr class="q-total-row"><td colspan="4">Total Current Annual Spend</td><td class="q-right">${money(currentGrand)}</td></tr>`;
+      html += `</table>`;
+    } else {
+      html += `<p class="q-muted">No current spend data entered.</p>`;
+    }
+
+    // Section 2: Gaps / Missing
+    if (gaps.length > 0){
+      html += `<h2>Coverage Gaps</h2>`;
+      html += `<p>The following services are not currently in use or have no vendor assigned:</p>`;
+      html += `<table><tr><th>Service</th><th>Status</th></tr>`;
+      for (const g of gaps){
+        html += `<tr><td class="q-gap-item">${g}</td><td class="q-gap-item">Not in use</td></tr>`;
+      }
+      html += `</table>`;
+    }
+
+    // Section 3: VectorStack Quote
+    html += `<h2>VectorStack&trade; Recommended Solution</h2>`;
+    html += `<h3>Platform: ${vsPlanLabel}</h3>`;
+    html += `<table>
+      <tr><th>Component</th><th class="q-right">Annual Cost</th></tr>
+      <tr><td>VectorStack Platform<br/><span class="q-muted" style="font-size:12px;">${vsPlanDetails}</span></td><td class="q-right q-bold">${money(vsAnnual)}</td></tr>`;
+
+    if (addlChecked.length > 0){
+      for (const svc of addlChecked){
+        const unitNote = svc.perUser
+          ? (svc.monthly ? `$${svc.price}/user/mo × ${users} users × 12 mo` : `$${svc.price}/user/yr × ${users} users`)
+          : `$${svc.price}/year (flat)`;
+        html += `<tr><td>${svc.name}<br/><span class="q-muted" style="font-size:12px;">${unitNote}</span></td><td class="q-right q-bold">${money(svc.annual)}</td></tr>`;
+      }
+    }
+
+    html += `<tr class="q-total-row"><td>Total VectorStack Annual Cost</td><td class="q-right">${money(totalVSQuote)}</td></tr>`;
+    html += `</table>`;
+
+    // Section 4: Savings Summary
+    html += `<h2>Savings Summary</h2>`;
+    html += `<table>
+      <tr><td>Current Annual Spend</td><td class="q-right q-bold">${money(currentGrand)}</td></tr>
+      <tr><td>VectorStack Annual Cost</td><td class="q-right q-bold q-accent">${money(totalVSQuote)}</td></tr>
+      <tr class="q-total-row"><td>${savings >= 0 ? "Estimated Annual Savings" : "Additional Investment"}</td>
+        <td class="q-right ${savings >= 0 ? "q-green" : ""}">${money(Math.abs(savings))} ${savings >= 0 ? `(${savingsPct}% reduction)` : `(${Math.abs(savingsPct)}% increase)`}</td></tr>
+    </table>`;
+
+    // Footer
+    html += `<div style="margin-top:40px;padding-top:20px;border-top:1px solid #e8eef8;font-size:12px;color:#5a6a85;">
+      <p>* Setup and data-migration fees waived for contracts signed within the next 12 months.</p>
+      <p>* 99.9% uptime SLA on all plans. Volume discounts available.</p>
+      <p style="margin-top:12px;"><strong>Built for organizations that take privacy seriously.</strong><br/>HIPAA · SOC 2 · Security-Sensitive Environments</p>
+      <p style="margin-top:12px;"><strong>vectordigital.io</strong> · Contact us for a custom quote.</p>
+    </div>`;
+
+    html += `</div>`;
+
+    $("#quoteContent").innerHTML = html;
+    $("#quoteOverlay").classList.add("active");
+  }
+
   // --- init ---
   const rowsEl = $("#rows");
   for (const cat of CATEGORIES) rowsEl.appendChild(makeRow(cat, {}));
+  buildAdditionalServicesUI();
   recalcAll();
   updateMeta();
   populateFilterCategories();
@@ -1389,7 +1899,7 @@
   $("#loadBtn").addEventListener("click", () => { load(); recalcAll(); updateMeta(); });
   $("#clearBtn").addEventListener("click", () => clearAll());
 
-  $("#pdfBtn").addEventListener("click", () => window.print());
+  $("#pdfBtn").addEventListener("click", () => generateQuote());
 
   $("#exportBtn").addEventListener("click", () => {
     download("software-cost-analysis.csv", toCSV(), "text/csv");
