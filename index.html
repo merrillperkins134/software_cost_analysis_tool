@@ -132,6 +132,14 @@
     }
     .tip b{ color:rgba(255,255,255,.86); }
 
+    /* Category label (static) */
+    .cat-label{
+      font-weight:700;
+      font-size:13px;
+      line-height:1.25;
+      word-break:break-word;
+    }
+
     /* Layout:
        Category wider + allow nicer display; remove Billing + Annual columns */
     .gridhead, .row{
@@ -142,8 +150,7 @@
         1.05fr   /* Price/User Month */
         0.75fr   /* Users */
         1.05fr   /* Total */
-        1.25fr   /* Notes */
-        44px;    /* remove */
+        1.25fr   /* Notes */;
       gap:10px;
       align-items:center;
     }
@@ -234,19 +241,6 @@
       font-size:12px;
       margin-top:2px;
     }
-
-    .xbtn{
-      width:40px; height:40px;
-      border-radius:14px;
-      display:flex; align-items:center; justify-content:center;
-      background: rgba(0,0,0,.22);
-      border:1px solid rgba(255,255,255,.12);
-      cursor:pointer;
-      user-select:none;
-      transition: transform .12s ease, border-color .12s ease;
-    }
-    .xbtn:hover{ transform: translateY(-1px); border-color: rgba(251,113,133,.35); }
-    .xbtn:active{ transform: translateY(0); }
 
     .footerbar{
       display:flex;
@@ -397,46 +391,6 @@
       flex-shrink:0;
     }
 
-    /* --- Custom category modal --- */
-    .modal-overlay{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,.65);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      z-index:1000;
-      opacity:0;
-      pointer-events:none;
-      transition: opacity .2s ease;
-    }
-    .modal-overlay.open{
-      opacity:1;
-      pointer-events:auto;
-    }
-    .modal{
-      background: var(--bg1);
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      padding:24px;
-      max-width:420px;
-      width:90%;
-      box-shadow: var(--shadow);
-    }
-    .modal h3{
-      margin:0 0 14px;
-      font-size:18px;
-    }
-    .modal input{
-      width:100%;
-      margin-bottom:12px;
-    }
-    .modal .modal-actions{
-      display:flex;
-      gap:10px;
-      justify-content:flex-end;
-    }
-
     /* Print/PDF */
     @media print{
       body{ background:#fff; color:#000; padding:0; }
@@ -465,8 +419,6 @@
     </div>
 
     <div class="actions">
-      <button id="addRowBtn">➕ Add Row</button>
-      <button id="addCatBtn" class="secondary">➕ Custom Category</button>
       <button id="exportBtn" class="secondary">⬇ Export CSV</button>
       <button id="importBtn" class="secondary">⬆ Import CSV</button>
       <button id="pdfBtn" class="secondary">🖨 Generate PDF</button>
@@ -503,7 +455,6 @@
       <div>USERS</div>
       <div>TOTAL APP COST</div>
       <div>NOTES</div>
-      <div></div>
     </div>
 
     <div id="rows" class="rows"></div>
@@ -565,17 +516,6 @@
   </div>
 </div>
 
-<!-- Custom Category Modal -->
-<div class="modal-overlay" id="catModal">
-  <div class="modal">
-    <h3>Add Custom Category</h3>
-    <input type="text" id="newCatInput" placeholder="e.g. Data_Analytics" />
-    <div class="modal-actions">
-      <button class="secondary" id="catModalCancel">Cancel</button>
-      <button id="catModalAdd">Add Category</button>
-    </div>
-  </div>
-</div>
 
 <script>
 (() => {
@@ -596,52 +536,34 @@
     "#f59e0b","#3b82f6","#34d399"
   ];
 
-  // --- CONFIG: categories + vendors ---
-  const CATEGORIES = [
-    "SSO_Authentication",
-    "Password_Manager",
-    "Zero_Trust_VPN",
-    "Mail_Calendar",
-    "Messaging_and_Video_Conferencing",
-    "Cloud_Workspace",
-    "Office_Suite",
-    "PDF_Utility",
-    "ERP",
-    "CRM",
-    "PM_Tool",
-    "Digital_Signature",
-    "Note_Taking",
-    "LMS_Hosting",
-    "Monitoring_Scanning_Endpoint_Security",
-    "Off_Site_Storage_Backup",
-    "Annual_Security_Risk_Assessment",
-    "Policy_Management",
-    "Annual_Cybersecurity_Awareness_Training",
-    "AI_Chat",
-    "Hosted_Web_Design_Toolkit",
-    "UI_UX_Design",
-    "Tiered_Customer_Support"
-  ];
+  // --- CONFIG: categories with category-specific vendors ---
+  const CATEGORY_VENDORS = {
+    "SSO_Authentication": ["None","Okta","Auth0","OneLogin","Microsoft Entra ID","Ping Identity","Duo Security","JumpCloud","Keycloak","Other (type)..."],
+    "Password_Manager": ["None","Bitwarden","1Password","LastPass","Dashlane","NordPass","Keeper","RoboForm","Enpass","Other (type)..."],
+    "Zero_Trust_VPN": ["None","Zscaler","Cloudflare Access","Palo Alto Prisma","Tailscale","WireGuard","NordLayer","Perimeter 81","Twingate","Other (type)..."],
+    "Mail_Calendar": ["None","Microsoft 365","Google Workspace","Zoho Mail","ProtonMail","Fastmail","Tutanota","Rackspace Email","Other (type)..."],
+    "Messaging_and_Video_Conferencing": ["None","Microsoft Teams","Slack","Zoom","Google Meet","Cisco Webex","RingCentral","GoTo Meeting","Discord","Other (type)..."],
+    "Cloud_Workspace": ["None","Microsoft 365","Google Workspace","Zoho Workplace","Dropbox Business","Box","Citrix Workspace","Other (type)..."],
+    "Office_Suite": ["None","Microsoft 365","Google Docs","LibreOffice","Zoho Docs","Apple iWork","WPS Office","OnlyOffice","Other (type)..."],
+    "PDF_Utility": ["None","Adobe Acrobat","Foxit PDF","Nitro PDF","Smallpdf","PDF Expert","Soda PDF","Other (type)..."],
+    "ERP": ["None","SAP","Oracle NetSuite","Microsoft Dynamics 365","Sage","Odoo","Acumatica","Epicor","Infor","Other (type)..."],
+    "CRM": ["None","Salesforce","HubSpot","Microsoft Dynamics 365","Zoho CRM","Pipedrive","Freshsales","Monday CRM","SugarCRM","Other (type)..."],
+    "PM_Tool": ["None","Asana","Monday.com","Jira","Trello","ClickUp","Basecamp","Wrike","Smartsheet","Microsoft Project","Other (type)..."],
+    "Digital_Signature": ["None","DocuSign","Adobe Sign","HelloSign","PandaDoc","SignNow","Zoho Sign","OneSpan","Other (type)..."],
+    "Note_Taking": ["None","Notion","Evernote","Microsoft OneNote","Obsidian","Bear","Coda","Confluence","Slite","Other (type)..."],
+    "LMS_Hosting": ["None","Teachable","Thinkific","Moodle","Canvas LMS","Blackboard","TalentLMS","Docebo","LearnDash","Other (type)..."],
+    "Monitoring_Scanning_Endpoint_Security": ["None","CrowdStrike","SentinelOne","Carbon Black","Sophos","Malwarebytes","ESET","Qualys","Rapid7","Tenable","Other (type)..."],
+    "Off_Site_Storage_Backup": ["None","Veeam","Acronis","Backblaze","Carbonite","Datto","AWS Backup","Azure Backup","Wasabi","CrashPlan","Other (type)..."],
+    "Annual_Security_Risk_Assessment": ["None","KnowBe4","Coalfire","Rapid7","Qualys","Trustwave","A-LIGN","Schellman","Sterling","Other (type)..."],
+    "Policy_Management": ["None","PowerDMS","PolicyTech","ConvergePoint","LogicGate","ZenGRC","Hyperproof","Drata","Vanta","Other (type)..."],
+    "Annual_Cybersecurity_Awareness_Training": ["None","KnowBe4","Proofpoint","SANS Security Awareness","Cofense","Infosec IQ","Ninjio","Curricula","Other (type)..."],
+    "AI_Chat": ["None","ChatGPT / OpenAI","Claude / Anthropic","Google Gemini","Microsoft Copilot","Perplexity","Jasper","Copy.ai","Other (type)..."],
+    "Hosted_Web_Design_Toolkit": ["None","Webflow","WordPress","Wix","Squarespace","Shopify","Framer","Cargo","Other (type)..."],
+    "UI_UX_Design": ["None","Figma","Adobe XD","Sketch","InVision","Canva","Framer","Axure","Marvel","Other (type)..."],
+    "Tiered_Customer_Support": ["None","Zendesk","Freshdesk","Intercom","Help Scout","Salesforce Service Cloud","HubSpot Service Hub","Zoho Desk","LiveAgent","Other (type)..."]
+  };
 
-  const VENDORS = [
-    "None",
-    "Microsoft",
-    "Google",
-    "Okta",
-    "Auth0",
-    "OneLogin",
-    "Keycloak",
-    "Bitwarden",
-    "1Password",
-    "LastPass",
-    "Dashlane",
-    "NordPass",
-    "Zoho",
-    "Webflow",
-    "LibreOffice",
-    "Sterling",
-    "Other (type)..."
-  ];
+  const CATEGORIES = Object.keys(CATEGORY_VENDORS);
 
   const STORAGE_KEY = "softwareCostAnalysisTool.v2";
 
@@ -681,25 +603,29 @@
     return s;
   }
 
-  function makeRow(data={}){
+  function makeRow(categoryKey, data={}){
     const row = document.createElement("div");
     row.className = "row";
 
-    // Category
-    const cat = makeSelect(CATEGORIES, data.category || CATEGORIES[0]);
-    cat.title = cat.value;
-    cat.addEventListener("change", () => { cat.title = cat.value; recalcRow(row); recalcAll(); });
+    // Category (static label)
+    const catLabel = document.createElement("div");
+    catLabel.className = "cat-label";
+    catLabel.textContent = categoryKey.replace(/_/g, " ");
 
-    // Vendor + other input
+    // Hidden field to track category value
+    const cat = { value: categoryKey };
+
+    // Vendor + other input (category-specific vendors)
     const vendorWrap = document.createElement("div");
     vendorWrap.className = "vendorwrap";
 
-    const vendor = makeSelect(VENDORS, data.vendor || "Other (type)...");
+    const vendorOptions = CATEGORY_VENDORS[categoryKey] || ["None","Other (type)..."];
+    const vendor = makeSelect(vendorOptions, data.vendor || "None");
     vendor.title = vendor.value;
 
     const other = document.createElement("input");
     other.type = "text";
-    other.placeholder = "Type vendor/app…";
+    other.placeholder = "Type vendor/app...";
     other.className = "otherInput";
     other.value = data.otherVendor || "";
     other.addEventListener("input", () => { recalcRow(row); recalcAll(); });
@@ -715,7 +641,7 @@
     vendorWrap.appendChild(vendor);
     vendorWrap.appendChild(other);
 
-    // Price month (text to avoid spinners; we parse it)
+    // Price month
     const pm = document.createElement("input");
     pm.type = "text";
     pm.inputMode = "decimal";
@@ -723,7 +649,7 @@
     pm.value = data.priceMonth ?? "";
     pm.addEventListener("input", () => { recalcRow(row); recalcAll(); });
 
-    // Users (text to avoid spinners; we parse it)
+    // Users
     const users = document.createElement("input");
     users.type = "text";
     users.inputMode = "numeric";
@@ -738,29 +664,17 @@
 
     // Notes
     const notes = document.createElement("textarea");
-    notes.placeholder = "Notes…";
+    notes.placeholder = "Notes...";
     notes.value = data.notes || "";
-
-    // Remove
-    const x = document.createElement("div");
-    x.className = "xbtn";
-    x.textContent = "×";
-    x.title = "Remove row";
-    x.addEventListener("click", () => {
-      row.remove();
-      recalcAll();
-      updateMeta();
-    });
 
     row._fields = { cat, vendor, other, pm, users, total, notes };
 
-    row.appendChild(cat);
+    row.appendChild(catLabel);
     row.appendChild(vendorWrap);
     row.appendChild(pm);
     row.appendChild(users);
     row.appendChild(total);
     row.appendChild(notes);
-    row.appendChild(x);
 
     recalcRow(row);
     return row;
@@ -769,9 +683,8 @@
   // --- calculations ---
   // Total App Cost is annualized: priceMonth * users * 12
   function recalcRow(row){
-    const { cat, vendor, other, pm, users, total } = row._fields;
+    const { vendor, other, pm, users, total } = row._fields;
 
-    cat.title = cat.value;
     vendor.title = (vendor.value === "Other (type)...")
       ? (other.value || vendor.value)
       : vendor.value;
@@ -809,10 +722,11 @@
     const rows = $$("#rows .row");
     for (const r of rows){
       const f = r._fields;
+      const catValue = f.cat.value;
       const vendorText = f.vendor.value === "Other (type)..." ? f.other.value : f.vendor.value;
-      const text = [f.cat.value, vendorText, f.notes.value].join(" ").toLowerCase();
+      const text = [catValue, vendorText, f.notes.value].join(" ").toLowerCase();
       const matchSearch = !query || text.includes(query);
-      const matchCat = !catFilter || f.cat.value === catFilter;
+      const matchCat = !catFilter || catValue === catFilter;
       r.style.display = (matchSearch && matchCat) ? "" : "none";
     }
   }
@@ -1011,8 +925,14 @@
   function loadData(items){
     const container = $("#rows");
     container.innerHTML = "";
+    // Build a lookup from category to saved data
+    const dataMap = {};
     for (const item of items){
-      container.appendChild(makeRow(item));
+      dataMap[item.category] = item;
+    }
+    // Create one row per category, using saved data if available
+    for (const cat of CATEGORIES){
+      container.appendChild(makeRow(cat, dataMap[cat] || {}));
     }
     recalcAll();
     updateMeta();
@@ -1035,8 +955,9 @@
   function clearAll(){
     if (!confirm("Clear all rows?")) return;
     localStorage.removeItem(STORAGE_KEY);
-    $("#rows").innerHTML = "";
-    for (let i=0;i<8;i++) $("#rows").appendChild(makeRow({}));
+    const container = $("#rows");
+    container.innerHTML = "";
+    for (const cat of CATEGORIES) container.appendChild(makeRow(cat, {}));
     recalcAll();
     updateMeta();
     $("#lastSaved").textContent = "—";
@@ -1049,7 +970,7 @@
     const lines = [header.join(",")];
 
     for (const r of rows){
-      const vendorName = r.vendor === "Other (type)..." ? (r.otherVendor || "") : r.vendor;
+      const vendorName = (r.vendor === "Other (type)..." || r.vendor === "None") ? (r.otherVendor || r.vendor) : r.vendor;
       const annualized = num(String(r.priceMonth).replace(/[^0-9.]/g,"")) * num(String(r.users).replace(/[^0-9.]/g,"")) * 12;
 
       const safeNotes = (r.notes || "").replaceAll('"','""');
@@ -1114,12 +1035,14 @@
     const out = [];
     for (let i=1;i<lines.length;i++){
       const cols = splitLine(lines[i]);
+      const catText = (cols[idx.cat] || CATEGORIES[0]).trim();
       const vendorText = (cols[idx.vendor] || "").trim();
-      const vendorIsKnown = VENDORS.includes(vendorText);
-      const useOther = (!vendorIsKnown && vendorText !== "") ? "Other (type)..." : (vendorText || "Other (type)...");
+      const catVendors = CATEGORY_VENDORS[catText] || [];
+      const vendorIsKnown = catVendors.includes(vendorText);
+      const useOther = (!vendorIsKnown && vendorText !== "") ? "Other (type)..." : (vendorText || "None");
 
       out.push({
-        category: (cols[idx.cat] || CATEGORIES[0]).trim(),
+        category: catText,
         vendor: useOther,
         otherVendor: (useOther === "Other (type)...") ? vendorText : "",
         priceMonth: (cols[idx.pm] || "").trim(),
@@ -1130,59 +1053,12 @@
     return out;
   }
 
-  // --- Custom Category ---
-  function openCatModal(){
-    $("#catModal").classList.add("open");
-    $("#newCatInput").value = "";
-    $("#newCatInput").focus();
-  }
-  function closeCatModal(){
-    $("#catModal").classList.remove("open");
-  }
-  function addCustomCategory(){
-    const val = $("#newCatInput").value.trim().replace(/\s+/g, "_");
-    if (!val) return;
-    if (CATEGORIES.includes(val)){
-      alert("Category already exists.");
-      return;
-    }
-    CATEGORIES.push(val);
-    // Update all existing category selects
-    $$("#rows .row").forEach(r => {
-      const catSel = r._fields.cat;
-      const o = document.createElement("option");
-      o.value = val;
-      o.textContent = val;
-      catSel.appendChild(o);
-    });
-    populateFilterCategories();
-    closeCatModal();
-  }
-
   // --- init ---
   const rowsEl = $("#rows");
-  for (let i=0;i<8;i++) rowsEl.appendChild(makeRow({}));
+  for (const cat of CATEGORIES) rowsEl.appendChild(makeRow(cat, {}));
   recalcAll();
   updateMeta();
   populateFilterCategories();
-
-  $("#addRowBtn").addEventListener("click", () => {
-    rowsEl.appendChild(makeRow({}));
-    recalcAll();
-    updateMeta();
-  });
-
-  // Custom category button + modal
-  $("#addCatBtn").addEventListener("click", () => openCatModal());
-  $("#catModalCancel").addEventListener("click", () => closeCatModal());
-  $("#catModalAdd").addEventListener("click", () => addCustomCategory());
-  $("#newCatInput").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") addCustomCategory();
-    if (e.key === "Escape") closeCatModal();
-  });
-  $("#catModal").addEventListener("click", (e) => {
-    if (e.target === $("#catModal")) closeCatModal();
-  });
 
   // Filter / Search
   $("#searchInput").addEventListener("input", () => applyFilter());
