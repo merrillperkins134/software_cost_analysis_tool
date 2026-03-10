@@ -289,10 +289,158 @@
     }
     .note b{ color:rgba(255,255,255,.82); }
 
+    /* --- Filter bar --- */
+    .filterbar{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      padding:12px 18px;
+      border-bottom:1px solid var(--line);
+      background: rgba(0,0,0,.10);
+      flex-wrap:wrap;
+    }
+    .filterbar input[type="text"]{
+      max-width:280px;
+      min-height:36px;
+      padding:8px 12px;
+    }
+    .filterbar select{
+      max-width:220px;
+      min-height:36px;
+      padding:8px 12px;
+    }
+    .filterbar label{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:600;
+      letter-spacing:.4px;
+      text-transform:uppercase;
+    }
+
+    /* --- Summary cards --- */
+    .summary-grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap:12px;
+      margin-top:16px;
+    }
+    .summary-card{
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:16px 18px;
+      box-shadow: var(--shadow);
+    }
+    .summary-card .sc-label{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.5px;
+      color:var(--muted);
+      font-weight:700;
+      margin-bottom:6px;
+    }
+    .summary-card .sc-value{
+      font-size:22px;
+      font-weight:900;
+      font-variant-numeric: tabular-nums;
+    }
+    .summary-card .sc-sub{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:4px;
+    }
+
+    /* --- Chart section --- */
+    .chart-section{
+      margin-top:16px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:16px;
+    }
+    @media (max-width:768px){
+      .chart-section{ grid-template-columns:1fr; }
+    }
+    .chart-card{
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow: var(--shadow);
+    }
+    .chart-card .chart-title{
+      font-size:14px;
+      font-weight:800;
+      margin-bottom:14px;
+      letter-spacing:.2px;
+    }
+    .chart-card canvas{
+      width:100%;
+      max-height:300px;
+    }
+    .chart-legend{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:12px;
+    }
+    .chart-legend-item{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      font-size:11px;
+      color:var(--muted);
+    }
+    .chart-legend-item .swatch{
+      width:10px;
+      height:10px;
+      border-radius:3px;
+      flex-shrink:0;
+    }
+
+    /* --- Custom category modal --- */
+    .modal-overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.65);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:1000;
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .2s ease;
+    }
+    .modal-overlay.open{
+      opacity:1;
+      pointer-events:auto;
+    }
+    .modal{
+      background: var(--bg1);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:24px;
+      max-width:420px;
+      width:90%;
+      box-shadow: var(--shadow);
+    }
+    .modal h3{
+      margin:0 0 14px;
+      font-size:18px;
+    }
+    .modal input{
+      width:100%;
+      margin-bottom:12px;
+    }
+    .modal .modal-actions{
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+    }
+
     /* Print/PDF */
     @media print{
       body{ background:#fff; color:#000; padding:0; }
-      header, .actions, .note{ display:none !important; }
+      header, .actions, .note, .filterbar, .summary-grid, .chart-section{ display:none !important; }
       .card{ box-shadow:none; border:1px solid #ddd; }
       .row{ break-inside:avoid; }
       select, input, textarea{ border:1px solid #ddd; background:#fff; color:#000; }
@@ -318,6 +466,7 @@
 
     <div class="actions">
       <button id="addRowBtn">➕ Add Row</button>
+      <button id="addCatBtn" class="secondary">➕ Custom Category</button>
       <button id="exportBtn" class="secondary">⬇ Export CSV</button>
       <button id="importBtn" class="secondary">⬆ Import CSV</button>
       <button id="pdfBtn" class="secondary">🖨 Generate PDF</button>
@@ -338,6 +487,13 @@
         Tip: Enter what the customer pays per user per month. The calculator multiplies by <b>Users × 12</b>.
         If they only know annual, divide by 12 (or drop the annual figure in <b>Notes</b>).
       </div>
+    </div>
+
+    <div class="filterbar">
+      <label>Filter:</label>
+      <input type="text" id="searchInput" placeholder="Search categories, vendors, notes..." />
+      <label>Category:</label>
+      <select id="filterCategory"><option value="">All Categories</option></select>
     </div>
 
     <div class="gridhead">
@@ -366,9 +522,58 @@
     </div>
   </div>
 
+  <!-- Summary Statistics -->
+  <div class="summary-grid" id="summaryGrid">
+    <div class="summary-card">
+      <div class="sc-label">Monthly Total</div>
+      <div class="sc-value" id="sumMonthly">$0.00</div>
+      <div class="sc-sub">all rows combined</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-label">Avg Cost / User / Month</div>
+      <div class="sc-value" id="sumAvgUser">$0.00</div>
+      <div class="sc-sub">across all active rows</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-label">Highest Spend Category</div>
+      <div class="sc-value" id="sumTopCat">--</div>
+      <div class="sc-sub" id="sumTopCatAmt"></div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-label">Active Software Count</div>
+      <div class="sc-value" id="sumActiveCount">0</div>
+      <div class="sc-sub">rows with cost > $0</div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="chart-section">
+    <div class="chart-card">
+      <div class="chart-title">Spend by Category</div>
+      <canvas id="pieChart" width="400" height="300"></canvas>
+      <div class="chart-legend" id="pieLegend"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Top 10 Costs (Annualized)</div>
+      <canvas id="barChart" width="400" height="300"></canvas>
+    </div>
+  </div>
+
   <div class="note">
     <b>Offline notes:</b> Saves/loads using your browser’s local storage (no internet, no servers).
     Export CSV anytime for archiving. PDF uses your browser print dialog.
+  </div>
+</div>
+
+<!-- Custom Category Modal -->
+<div class="modal-overlay" id="catModal">
+  <div class="modal">
+    <h3>Add Custom Category</h3>
+    <input type="text" id="newCatInput" placeholder="e.g. Data_Analytics" />
+    <div class="modal-actions">
+      <button class="secondary" id="catModalCancel">Cancel</button>
+      <button id="catModalAdd">Add Category</button>
+    </div>
   </div>
 </div>
 
@@ -381,6 +586,15 @@
 
   // NOTE: The data URI is long. Paste the full base64 string here.
   // I trimmed it in this chat for readability. If you want, I’ll return the exact full string in a follow-up.
+
+  // --- CHART COLORS ---
+  const CHART_COLORS = [
+    "#7fb3ff","#6ee7b7","#fb7185","#fbbf24","#a78bfa",
+    "#f97316","#22d3ee","#e879f9","#84cc16","#f43f5e",
+    "#14b8a6","#8b5cf6","#eab308","#06b6d4","#ec4899",
+    "#10b981","#6366f1","#ef4444","#0ea5e9","#d946ef",
+    "#f59e0b","#3b82f6","#34d399"
+  ];
 
   // --- CONFIG: categories + vendors ---
   const CATEGORIES = [
@@ -580,10 +794,203 @@
       grand += r._annualized || 0;
     }
     $("#grandTotal").textContent = money(grand);
+    updateSummary();
+    updateCharts();
   }
 
   function updateMeta(){
     $("#rowCount").textContent = String($$("#rows .row").length);
+  }
+
+  // --- Filter / Search ---
+  function applyFilter(){
+    const query = ($("#searchInput").value || "").toLowerCase();
+    const catFilter = $("#filterCategory").value;
+    const rows = $$("#rows .row");
+    for (const r of rows){
+      const f = r._fields;
+      const vendorText = f.vendor.value === "Other (type)..." ? f.other.value : f.vendor.value;
+      const text = [f.cat.value, vendorText, f.notes.value].join(" ").toLowerCase();
+      const matchSearch = !query || text.includes(query);
+      const matchCat = !catFilter || f.cat.value === catFilter;
+      r.style.display = (matchSearch && matchCat) ? "" : "none";
+    }
+  }
+
+  function populateFilterCategories(){
+    const sel = $("#filterCategory");
+    const current = sel.value;
+    sel.innerHTML = '<option value="">All Categories</option>';
+    for (const cat of CATEGORIES){
+      const o = document.createElement("option");
+      o.value = cat;
+      o.textContent = cat.replace(/_/g, " ");
+      sel.appendChild(o);
+    }
+    sel.value = current;
+  }
+
+  // --- Summary Statistics ---
+  function updateSummary(){
+    const rows = $$("#rows .row");
+    let totalAnnual = 0;
+    let totalUsers = 0;
+    let activeCount = 0;
+    const catSpend = {};
+
+    for (const r of rows){
+      const f = r._fields;
+      const ann = r._annualized || 0;
+      const u = num(String(f.users.value).replace(/[^0-9.]/g,""));
+      totalAnnual += ann;
+      totalUsers += u;
+      if (ann > 0) activeCount++;
+      const cat = f.cat.value;
+      catSpend[cat] = (catSpend[cat] || 0) + ann;
+    }
+
+    $("#sumMonthly").textContent = money(totalAnnual / 12);
+    $("#sumAvgUser").textContent = totalUsers > 0 ? money((totalAnnual / 12) / totalUsers) : "$0.00";
+    $("#sumActiveCount").textContent = String(activeCount);
+
+    let topCat = "--";
+    let topAmt = 0;
+    for (const [cat, amt] of Object.entries(catSpend)){
+      if (amt > topAmt){ topAmt = amt; topCat = cat; }
+    }
+    $("#sumTopCat").textContent = topCat.replace(/_/g, " ");
+    $("#sumTopCatAmt").textContent = topAmt > 0 ? money(topAmt) + " / year" : "";
+  }
+
+  // --- Charts ---
+  function updateCharts(){
+    drawPieChart();
+    drawBarChart();
+  }
+
+  function drawPieChart(){
+    const canvas = $("#pieChart");
+    const ctx = canvas.getContext("2d");
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, rect.width, rect.height);
+
+    const rows = $$("#rows .row");
+    const catSpend = {};
+    for (const r of rows){
+      const cat = r._fields.cat.value;
+      const ann = r._annualized || 0;
+      if (ann > 0) catSpend[cat] = (catSpend[cat] || 0) + ann;
+    }
+
+    const entries = Object.entries(catSpend).sort((a,b) => b[1] - a[1]);
+    const total = entries.reduce((s, e) => s + e[1], 0);
+    const legendEl = $("#pieLegend");
+    legendEl.innerHTML = "";
+
+    if (total === 0){
+      ctx.fillStyle = "rgba(255,255,255,.15)";
+      ctx.font = "14px " + getComputedStyle(document.body).fontFamily;
+      ctx.textAlign = "center";
+      ctx.fillText("No data to display", rect.width/2, rect.height/2);
+      return;
+    }
+
+    const cx = rect.width * 0.4;
+    const cy = rect.height / 2;
+    const radius = Math.min(cx, cy) - 10;
+    let startAngle = -Math.PI / 2;
+
+    entries.forEach(([cat, amt], i) => {
+      const slice = (amt / total) * Math.PI * 2;
+      const color = CHART_COLORS[i % CHART_COLORS.length];
+
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, radius, startAngle, startAngle + slice);
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+
+      startAngle += slice;
+
+      const item = document.createElement("div");
+      item.className = "chart-legend-item";
+      const pct = ((amt / total) * 100).toFixed(1);
+      item.innerHTML = `<span class="swatch" style="background:${color}"></span>${cat.replace(/_/g," ")} (${pct}%)`;
+      legendEl.appendChild(item);
+    });
+  }
+
+  function drawBarChart(){
+    const canvas = $("#barChart");
+    const ctx = canvas.getContext("2d");
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, rect.width, rect.height);
+
+    const rows = $$("#rows .row");
+    const items = [];
+    for (const r of rows){
+      const f = r._fields;
+      const ann = r._annualized || 0;
+      if (ann > 0){
+        const vendorText = f.vendor.value === "Other (type)..." ? (f.other.value || "Other") : f.vendor.value;
+        items.push({ label: f.cat.value.replace(/_/g," ") + " - " + vendorText, value: ann });
+      }
+    }
+    items.sort((a,b) => b.value - a.value);
+    const top = items.slice(0, 10);
+
+    if (top.length === 0){
+      ctx.fillStyle = "rgba(255,255,255,.15)";
+      ctx.font = "14px " + getComputedStyle(document.body).fontFamily;
+      ctx.textAlign = "center";
+      ctx.fillText("No data to display", rect.width/2, rect.height/2);
+      return;
+    }
+
+    const maxVal = top[0].value;
+    const leftMargin = 12;
+    const rightMargin = 80;
+    const topMargin = 8;
+    const barHeight = Math.min(22, (rect.height - topMargin) / top.length - 6);
+    const barGap = 4;
+    const barAreaWidth = rect.width - leftMargin - rightMargin;
+
+    ctx.font = "11px " + getComputedStyle(document.body).fontFamily;
+    ctx.textBaseline = "middle";
+
+    top.forEach((item, i) => {
+      const y = topMargin + i * (barHeight + barGap);
+      const w = (item.value / maxVal) * barAreaWidth;
+      const color = CHART_COLORS[i % CHART_COLORS.length];
+
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.roundRect(leftMargin, y, Math.max(w, 4), barHeight, 4);
+      ctx.fill();
+
+      ctx.fillStyle = "rgba(255,255,255,.82)";
+      ctx.textAlign = "left";
+      ctx.fillText(money(item.value), leftMargin + w + 6, y + barHeight / 2);
+
+      // label truncated
+      const maxLabelW = barAreaWidth * 0.45;
+      let label = item.label;
+      while (ctx.measureText(label).width > maxLabelW && label.length > 3){
+        label = label.slice(0, -4) + "...";
+      }
+      ctx.fillStyle = "rgba(255,255,255,.55)";
+      ctx.textAlign = "left";
+      ctx.fillText(label, leftMargin + 6, y + barHeight / 2);
+    });
   }
 
   // --- persistence ---
@@ -723,17 +1130,63 @@
     return out;
   }
 
+  // --- Custom Category ---
+  function openCatModal(){
+    $("#catModal").classList.add("open");
+    $("#newCatInput").value = "";
+    $("#newCatInput").focus();
+  }
+  function closeCatModal(){
+    $("#catModal").classList.remove("open");
+  }
+  function addCustomCategory(){
+    const val = $("#newCatInput").value.trim().replace(/\s+/g, "_");
+    if (!val) return;
+    if (CATEGORIES.includes(val)){
+      alert("Category already exists.");
+      return;
+    }
+    CATEGORIES.push(val);
+    // Update all existing category selects
+    $$("#rows .row").forEach(r => {
+      const catSel = r._fields.cat;
+      const o = document.createElement("option");
+      o.value = val;
+      o.textContent = val;
+      catSel.appendChild(o);
+    });
+    populateFilterCategories();
+    closeCatModal();
+  }
+
   // --- init ---
   const rowsEl = $("#rows");
   for (let i=0;i<8;i++) rowsEl.appendChild(makeRow({}));
   recalcAll();
   updateMeta();
+  populateFilterCategories();
 
   $("#addRowBtn").addEventListener("click", () => {
     rowsEl.appendChild(makeRow({}));
     recalcAll();
     updateMeta();
   });
+
+  // Custom category button + modal
+  $("#addCatBtn").addEventListener("click", () => openCatModal());
+  $("#catModalCancel").addEventListener("click", () => closeCatModal());
+  $("#catModalAdd").addEventListener("click", () => addCustomCategory());
+  $("#newCatInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") addCustomCategory();
+    if (e.key === "Escape") closeCatModal();
+  });
+  $("#catModal").addEventListener("click", (e) => {
+    if (e.target === $("#catModal")) closeCatModal();
+  });
+
+  // Filter / Search
+  $("#searchInput").addEventListener("input", () => applyFilter());
+  $("#filterCategory").addEventListener("change", () => applyFilter());
 
   $("#saveBtn").addEventListener("click", () => save());
   $("#loadBtn").addEventListener("click", () => { load(); recalcAll(); updateMeta(); });
@@ -764,6 +1217,9 @@
       updateMeta();
     }, 400);
   });
+
+  // Redraw charts on resize
+  window.addEventListener("resize", () => updateCharts());
 })();
 </script>
 </body>
