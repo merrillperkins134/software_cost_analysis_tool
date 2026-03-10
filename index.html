@@ -541,7 +541,7 @@
     "SSO_Authentication": ["None","Okta","Auth0","OneLogin","Microsoft Entra ID","Ping Identity","Duo Security","JumpCloud","Keycloak","Other (type)..."],
     "Password_Manager": ["None","Bitwarden","1Password","LastPass","Dashlane","NordPass","Keeper","RoboForm","Enpass","Other (type)..."],
     "Zero_Trust_VPN": ["None","Zscaler","Cloudflare Access","Palo Alto Prisma","Tailscale","WireGuard","NordLayer","Perimeter 81","Twingate","Other (type)..."],
-    "Mail_Calendar": ["None","Microsoft 365","Google Workspace","Zoho Mail","ProtonMail","Fastmail","Tutanota","Rackspace Email","Other (type)..."],
+    "Mail_Calander": ["None","Microsoft 365","Google Workspace","Zoho Mail","ProtonMail","Fastmail","Tutanota","Rackspace Email","Other (type)..."],
     "Messaging_and_Video_Conferencing": ["None","Microsoft Teams","Slack","Zoom","Google Meet","Cisco Webex","RingCentral","GoTo Meeting","Discord","Other (type)..."],
     "Cloud_Workspace": ["None","Microsoft 365","Google Workspace","Zoho Workplace","Dropbox Business","Box","Citrix Workspace","Other (type)..."],
     "Office_Suite": ["None","Microsoft 365","Google Docs","LibreOffice","Zoho Docs","Apple iWork","WPS Office","OnlyOffice","Other (type)..."],
@@ -610,7 +610,7 @@
     // Category (static label)
     const catLabel = document.createElement("div");
     catLabel.className = "cat-label";
-    catLabel.textContent = categoryKey.replace(/_/g, " ");
+    catLabel.textContent = categoryKey;
 
     // Hidden field to track category value
     const cat = { value: categoryKey };
@@ -738,7 +738,7 @@
     for (const cat of CATEGORIES){
       const o = document.createElement("option");
       o.value = cat;
-      o.textContent = cat.replace(/_/g, " ");
+      o.textContent = cat;
       sel.appendChild(o);
     }
     sel.value = current;
@@ -772,7 +772,7 @@
     for (const [cat, amt] of Object.entries(catSpend)){
       if (amt > topAmt){ topAmt = amt; topCat = cat; }
     }
-    $("#sumTopCat").textContent = topCat.replace(/_/g, " ");
+    $("#sumTopCat").textContent = topCat;
     $("#sumTopCatAmt").textContent = topAmt > 0 ? money(topAmt) + " / year" : "";
   }
 
@@ -834,7 +834,7 @@
       const item = document.createElement("div");
       item.className = "chart-legend-item";
       const pct = ((amt / total) * 100).toFixed(1);
-      item.innerHTML = `<span class="swatch" style="background:${color}"></span>${cat.replace(/_/g," ")} (${pct}%)`;
+      item.innerHTML = `<span class="swatch" style="background:${color}"></span>${cat} (${pct}%)`;
       legendEl.appendChild(item);
     });
   }
@@ -856,7 +856,7 @@
       const ann = r._annualized || 0;
       if (ann > 0){
         const vendorText = f.vendor.value === "Other (type)..." ? (f.other.value || "Other") : f.vendor.value;
-        items.push({ label: f.cat.value.replace(/_/g," ") + " - " + vendorText, value: ann });
+        items.push({ label: f.cat.value + " - " + vendorText, value: ann });
       }
     }
     items.sort((a,b) => b.value - a.value);
