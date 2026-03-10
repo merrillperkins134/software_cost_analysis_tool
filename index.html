@@ -6,15 +6,16 @@
   <title>Software Cost Analysis Tool</title>
   <style>
     :root{
-      --bg0:#05070c;
-      --bg1:#0b1220;
-      --panel:rgba(255,255,255,.06);
-      --panel2:rgba(255,255,255,.09);
-      --line:rgba(255,255,255,.10);
-      --text:rgba(255,255,255,.92);
-      --muted:rgba(255,255,255,.62);
-      --accent:#7fb3ff;
-      --shadow: 0 24px 80px rgba(0,0,0,.55);
+      --bg0:#f4f6fa;
+      --bg1:#eaeff5;
+      --panel:rgba(255,255,255,.85);
+      --panel2:rgba(255,255,255,.92);
+      --line:rgba(26,39,68,.12);
+      --text:#1a2744;
+      --muted:#5a6a85;
+      --accent:#2c5282;
+      --accent-light:#e8eef8;
+      --shadow: 0 4px 24px rgba(26,39,68,.08);
       --radius:18px;
       --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
     }
@@ -24,16 +25,12 @@
       margin:0;
       font-family:var(--sans);
       color:var(--text);
-      background:
-        radial-gradient(1200px 800px at 20% 10%, rgba(127,179,255,.12), transparent 55%),
-        radial-gradient(900px 700px at 80% 20%, rgba(110,231,183,.08), transparent 55%),
-        radial-gradient(1200px 900px at 50% 90%, rgba(251,113,133,.06), transparent 60%),
-        linear-gradient(180deg, var(--bg0), var(--bg1));
+      background: linear-gradient(180deg, var(--bg0), var(--bg1));
       min-height:100vh;
       padding:36px 22px 60px;
     }
 
-    .wrap{ max-width:1180px; margin:0 auto; }
+    .wrap{ max-width:1520px; margin:0 auto; }
     header{
       display:flex; gap:18px; align-items:flex-start; justify-content:space-between;
       margin-bottom:18px;
@@ -54,8 +51,8 @@
       /* keep it clean — no rounding/cropping */
       border-radius:0;
       background:transparent;
-      /* subtle lift on dark bg */
-      filter: drop-shadow(0 10px 18px rgba(0,0,0,.35));
+      /* subtle lift */
+      filter: drop-shadow(0 4px 8px rgba(26,39,68,.12));
     }
 
     .title h1{
@@ -83,13 +80,13 @@
     button{
       appearance:none;
       border:1px solid var(--line);
-      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      background:#fff;
       color:var(--text);
       border-radius:12px;
       padding:10px 12px;
       font-weight:600;
       cursor:pointer;
-      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      box-shadow: 0 2px 8px rgba(26,39,68,.06);
       transition: transform .12s ease, background .12s ease, border-color .12s ease;
       display:inline-flex;
       gap:8px;
@@ -97,13 +94,13 @@
       font-size:13px;
       user-select:none;
     }
-    button:hover{ transform: translateY(-1px); border-color: rgba(127,179,255,.35); }
+    button:hover{ transform: translateY(-1px); border-color: var(--accent); background:#f8fafd; }
     button:active{ transform: translateY(0); }
-    button.secondary{ background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03)); }
-    button.danger{ border-color: rgba(251,113,133,.35); }
+    button.secondary{ background:#f8fafd; }
+    button.danger{ border-color: #e57373; color:#c62828; }
 
     .card{
-      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      background:#fff;
       border:1px solid var(--line);
       border-radius:var(--radius);
       box-shadow: var(--shadow);
@@ -113,7 +110,7 @@
     .cardhead{
       display:flex; justify-content:space-between; align-items:flex-end;
       padding:18px 18px 12px;
-      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
+      background: var(--accent-light);
       border-bottom:1px solid var(--line);
       gap:18px;
       flex-wrap:wrap;
@@ -130,7 +127,7 @@
       max-width:560px;
       line-height:1.35;
     }
-    .tip b{ color:rgba(255,255,255,.86); }
+    .tip b{ color:var(--text); }
 
     /* Category label (static) */
     .cat-label{
@@ -161,8 +158,8 @@
       font-weight:800;
       letter-spacing:.6px;
       text-transform:uppercase;
-      color:rgba(255,255,255,.74);
-      background: rgba(0,0,0,.16);
+      color:var(--muted);
+      background: #f0f4f8;
       border-bottom:1px solid var(--line);
     }
 
@@ -170,15 +167,15 @@
     .row{
       padding:10px 8px;
       margin:8px;
-      border:1px solid rgba(255,255,255,.08);
+      border:1px solid var(--line);
       border-radius:16px;
-      background: radial-gradient(1200px 220px at 50% 0%, rgba(255,255,255,.07), rgba(255,255,255,.03));
+      background: #fafbfd;
     }
 
     select, input[type="text"], input[type="number"], textarea{
       width:100%;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.22);
+      border:1px solid #d0d7e2;
+      background: #fff;
       color:var(--text);
       border-radius:14px;
       padding:10px 12px;
@@ -197,8 +194,8 @@
     }
 
     select:focus, input:focus, textarea:focus{
-      border-color: rgba(127,179,255,.45);
-      box-shadow: 0 0 0 3px rgba(127,179,255,.12);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(44,82,130,.12);
     }
 
     /* Remove ugly number spinners */
@@ -250,15 +247,15 @@
       flex-wrap:wrap;
       padding:14px 18px;
       border-top:1px solid var(--line);
-      background: rgba(0,0,0,.12);
+      background: #f0f4f8;
     }
     .totals{
       display:flex; gap:10px; flex-wrap:wrap;
       align-items:center;
     }
     .pill{
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.18);
+      border:1px solid var(--line);
+      background: #fff;
       border-radius:999px;
       padding:8px 12px;
       display:flex;
@@ -281,7 +278,7 @@
       font-size:12px;
       line-height:1.4;
     }
-    .note b{ color:rgba(255,255,255,.82); }
+    .note b{ color:var(--text); }
 
     /* --- Filter bar --- */
     .filterbar{
@@ -290,7 +287,7 @@
       align-items:center;
       padding:12px 18px;
       border-bottom:1px solid var(--line);
-      background: rgba(0,0,0,.10);
+      background: #f8fafd;
       flex-wrap:wrap;
     }
     .filterbar input[type="text"]{
@@ -319,7 +316,7 @@
       margin-top:16px;
     }
     .summary-card{
-      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      background:#fff;
       border:1px solid var(--line);
       border-radius:var(--radius);
       padding:16px 18px;
@@ -355,7 +352,7 @@
       .chart-section{ grid-template-columns:1fr; }
     }
     .chart-card{
-      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      background:#fff;
       border:1px solid var(--line);
       border-radius:var(--radius);
       padding:18px;
@@ -397,8 +394,8 @@
       header, .actions, .note, .filterbar, .summary-grid, .chart-section{ display:none !important; }
       .card{ box-shadow:none; border:1px solid #ddd; }
       .row{ break-inside:avoid; }
-      select, input, textarea{ border:1px solid #ddd; background:#fff; color:#000; }
-      .totalCell .sub{ color:#333; }
+      select, input, textarea{ border:1px solid #ddd; background:#fff; color:#1a2744; }
+      .totalCell .sub{ color:#2c5282; }
     }
   </style>
 </head>
@@ -806,7 +803,7 @@
     legendEl.innerHTML = "";
 
     if (total === 0){
-      ctx.fillStyle = "rgba(255,255,255,.15)";
+      ctx.fillStyle = "#a0aec0";
       ctx.font = "14px " + getComputedStyle(document.body).fontFamily;
       ctx.textAlign = "center";
       ctx.fillText("No data to display", rect.width/2, rect.height/2);
@@ -863,7 +860,7 @@
     const top = items.slice(0, 10);
 
     if (top.length === 0){
-      ctx.fillStyle = "rgba(255,255,255,.15)";
+      ctx.fillStyle = "#a0aec0";
       ctx.font = "14px " + getComputedStyle(document.body).fontFamily;
       ctx.textAlign = "center";
       ctx.fillText("No data to display", rect.width/2, rect.height/2);
@@ -891,7 +888,7 @@
       ctx.roundRect(leftMargin, y, Math.max(w, 4), barHeight, 4);
       ctx.fill();
 
-      ctx.fillStyle = "rgba(255,255,255,.82)";
+      ctx.fillStyle = "#1a2744";
       ctx.textAlign = "left";
       ctx.fillText(money(item.value), leftMargin + w + 6, y + barHeight / 2);
 
@@ -901,7 +898,7 @@
       while (ctx.measureText(label).width > maxLabelW && label.length > 3){
         label = label.slice(0, -4) + "...";
       }
-      ctx.fillStyle = "rgba(255,255,255,.55)";
+      ctx.fillStyle = "#5a6a85";
       ctx.textAlign = "left";
       ctx.fillText(label, leftMargin + 6, y + barHeight / 2);
     });
