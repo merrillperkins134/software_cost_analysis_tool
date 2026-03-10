@@ -132,6 +132,14 @@
     }
     .tip b{ color:rgba(255,255,255,.86); }
 
+    /* Category label (static) */
+    .cat-label{
+      font-weight:700;
+      font-size:13px;
+      line-height:1.25;
+      word-break:break-word;
+    }
+
     /* Layout:
        Category wider + allow nicer display; remove Billing + Annual columns */
     .gridhead, .row{
@@ -142,8 +150,7 @@
         1.05fr   /* Price/User Month */
         0.75fr   /* Users */
         1.05fr   /* Total */
-        1.25fr   /* Notes */
-        44px;    /* remove */
+        1.25fr   /* Notes */;
       gap:10px;
       align-items:center;
     }
@@ -235,19 +242,6 @@
       margin-top:2px;
     }
 
-    .xbtn{
-      width:40px; height:40px;
-      border-radius:14px;
-      display:flex; align-items:center; justify-content:center;
-      background: rgba(0,0,0,.22);
-      border:1px solid rgba(255,255,255,.12);
-      cursor:pointer;
-      user-select:none;
-      transition: transform .12s ease, border-color .12s ease;
-    }
-    .xbtn:hover{ transform: translateY(-1px); border-color: rgba(251,113,133,.35); }
-    .xbtn:active{ transform: translateY(0); }
-
     .footerbar{
       display:flex;
       justify-content:space-between;
@@ -289,10 +283,118 @@
     }
     .note b{ color:rgba(255,255,255,.82); }
 
+    /* --- Filter bar --- */
+    .filterbar{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      padding:12px 18px;
+      border-bottom:1px solid var(--line);
+      background: rgba(0,0,0,.10);
+      flex-wrap:wrap;
+    }
+    .filterbar input[type="text"]{
+      max-width:280px;
+      min-height:36px;
+      padding:8px 12px;
+    }
+    .filterbar select{
+      max-width:220px;
+      min-height:36px;
+      padding:8px 12px;
+    }
+    .filterbar label{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:600;
+      letter-spacing:.4px;
+      text-transform:uppercase;
+    }
+
+    /* --- Summary cards --- */
+    .summary-grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap:12px;
+      margin-top:16px;
+    }
+    .summary-card{
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:16px 18px;
+      box-shadow: var(--shadow);
+    }
+    .summary-card .sc-label{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.5px;
+      color:var(--muted);
+      font-weight:700;
+      margin-bottom:6px;
+    }
+    .summary-card .sc-value{
+      font-size:22px;
+      font-weight:900;
+      font-variant-numeric: tabular-nums;
+    }
+    .summary-card .sc-sub{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:4px;
+    }
+
+    /* --- Chart section --- */
+    .chart-section{
+      margin-top:16px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:16px;
+    }
+    @media (max-width:768px){
+      .chart-section{ grid-template-columns:1fr; }
+    }
+    .chart-card{
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow: var(--shadow);
+    }
+    .chart-card .chart-title{
+      font-size:14px;
+      font-weight:800;
+      margin-bottom:14px;
+      letter-spacing:.2px;
+    }
+    .chart-card canvas{
+      width:100%;
+      max-height:300px;
+    }
+    .chart-legend{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:12px;
+    }
+    .chart-legend-item{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      font-size:11px;
+      color:var(--muted);
+    }
+    .chart-legend-item .swatch{
+      width:10px;
+      height:10px;
+      border-radius:3px;
+      flex-shrink:0;
+    }
+
     /* Print/PDF */
     @media print{
       body{ background:#fff; color:#000; padding:0; }
-      header, .actions, .note{ display:none !important; }
+      header, .actions, .note, .filterbar, .summary-grid, .chart-section{ display:none !important; }
       .card{ box-shadow:none; border:1px solid #ddd; }
       .row{ break-inside:avoid; }
       select, input, textarea{ border:1px solid #ddd; background:#fff; color:#000; }
@@ -317,7 +419,6 @@
     </div>
 
     <div class="actions">
-      <button id="addRowBtn">➕ Add Row</button>
       <button id="exportBtn" class="secondary">⬇ Export CSV</button>
       <button id="importBtn" class="secondary">⬆ Import CSV</button>
       <button id="pdfBtn" class="secondary">🖨 Generate PDF</button>
@@ -340,6 +441,13 @@
       </div>
     </div>
 
+    <div class="filterbar">
+      <label>Filter:</label>
+      <input type="text" id="searchInput" placeholder="Search categories, vendors, notes..." />
+      <label>Category:</label>
+      <select id="filterCategory"><option value="">All Categories</option></select>
+    </div>
+
     <div class="gridhead">
       <div>CATEGORY</div>
       <div>VENDOR / APP</div>
@@ -347,7 +455,6 @@
       <div>USERS</div>
       <div>TOTAL APP COST</div>
       <div>NOTES</div>
-      <div></div>
     </div>
 
     <div id="rows" class="rows"></div>
@@ -366,11 +473,49 @@
     </div>
   </div>
 
+  <!-- Summary Statistics -->
+  <div class="summary-grid" id="summaryGrid">
+    <div class="summary-card">
+      <div class="sc-label">Monthly Total</div>
+      <div class="sc-value" id="sumMonthly">$0.00</div>
+      <div class="sc-sub">all rows combined</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-label">Avg Cost / User / Month</div>
+      <div class="sc-value" id="sumAvgUser">$0.00</div>
+      <div class="sc-sub">across all active rows</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-label">Highest Spend Category</div>
+      <div class="sc-value" id="sumTopCat">--</div>
+      <div class="sc-sub" id="sumTopCatAmt"></div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-label">Active Software Count</div>
+      <div class="sc-value" id="sumActiveCount">0</div>
+      <div class="sc-sub">rows with cost > $0</div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="chart-section">
+    <div class="chart-card">
+      <div class="chart-title">Spend by Category</div>
+      <canvas id="pieChart" width="400" height="300"></canvas>
+      <div class="chart-legend" id="pieLegend"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Top 10 Costs (Annualized)</div>
+      <canvas id="barChart" width="400" height="300"></canvas>
+    </div>
+  </div>
+
   <div class="note">
     <b>Offline notes:</b> Saves/loads using your browser’s local storage (no internet, no servers).
     Export CSV anytime for archiving. PDF uses your browser print dialog.
   </div>
 </div>
+
 
 <script>
 (() => {
@@ -382,52 +527,43 @@
   // NOTE: The data URI is long. Paste the full base64 string here.
   // I trimmed it in this chat for readability. If you want, I’ll return the exact full string in a follow-up.
 
-  // --- CONFIG: categories + vendors ---
-  const CATEGORIES = [
-    "SSO_Authentication",
-    "Password_Manager",
-    "Zero_Trust_VPN",
-    "Mail_Calendar",
-    "Messaging_and_Video_Conferencing",
-    "Cloud_Workspace",
-    "Office_Suite",
-    "PDF_Utility",
-    "ERP",
-    "CRM",
-    "PM_Tool",
-    "Digital_Signature",
-    "Note_Taking",
-    "LMS_Hosting",
-    "Monitoring_Scanning_Endpoint_Security",
-    "Off_Site_Storage_Backup",
-    "Annual_Security_Risk_Assessment",
-    "Policy_Management",
-    "Annual_Cybersecurity_Awareness_Training",
-    "AI_Chat",
-    "Hosted_Web_Design_Toolkit",
-    "UI_UX_Design",
-    "Tiered_Customer_Support"
+  // --- CHART COLORS ---
+  const CHART_COLORS = [
+    "#7fb3ff","#6ee7b7","#fb7185","#fbbf24","#a78bfa",
+    "#f97316","#22d3ee","#e879f9","#84cc16","#f43f5e",
+    "#14b8a6","#8b5cf6","#eab308","#06b6d4","#ec4899",
+    "#10b981","#6366f1","#ef4444","#0ea5e9","#d946ef",
+    "#f59e0b","#3b82f6","#34d399"
   ];
 
-  const VENDORS = [
-    "None",
-    "Microsoft",
-    "Google",
-    "Okta",
-    "Auth0",
-    "OneLogin",
-    "Keycloak",
-    "Bitwarden",
-    "1Password",
-    "LastPass",
-    "Dashlane",
-    "NordPass",
-    "Zoho",
-    "Webflow",
-    "LibreOffice",
-    "Sterling",
-    "Other (type)..."
-  ];
+  // --- CONFIG: categories with category-specific vendors ---
+  const CATEGORY_VENDORS = {
+    "SSO_Authentication": ["None","Okta","Auth0","OneLogin","Microsoft Entra ID","Ping Identity","Duo Security","JumpCloud","Keycloak","Other (type)..."],
+    "Password_Manager": ["None","Bitwarden","1Password","LastPass","Dashlane","NordPass","Keeper","RoboForm","Enpass","Other (type)..."],
+    "Zero_Trust_VPN": ["None","Zscaler","Cloudflare Access","Palo Alto Prisma","Tailscale","WireGuard","NordLayer","Perimeter 81","Twingate","Other (type)..."],
+    "Mail_Calander": ["None","Microsoft 365","Google Workspace","Zoho Mail","ProtonMail","Fastmail","Tutanota","Rackspace Email","Other (type)..."],
+    "Messaging_and_Video_Conferencing": ["None","Microsoft Teams","Slack","Zoom","Google Meet","Cisco Webex","RingCentral","GoTo Meeting","Discord","Other (type)..."],
+    "Cloud_Workspace": ["None","Microsoft 365","Google Workspace","Zoho Workplace","Dropbox Business","Box","Citrix Workspace","Other (type)..."],
+    "Office_Suite": ["None","Microsoft 365","Google Docs","LibreOffice","Zoho Docs","Apple iWork","WPS Office","OnlyOffice","Other (type)..."],
+    "PDF_Utility": ["None","Adobe Acrobat","Foxit PDF","Nitro PDF","Smallpdf","PDF Expert","Soda PDF","Other (type)..."],
+    "ERP": ["None","SAP","Oracle NetSuite","Microsoft Dynamics 365","Sage","Odoo","Acumatica","Epicor","Infor","Other (type)..."],
+    "CRM": ["None","Salesforce","HubSpot","Microsoft Dynamics 365","Zoho CRM","Pipedrive","Freshsales","Monday CRM","SugarCRM","Other (type)..."],
+    "PM_Tool": ["None","Asana","Monday.com","Jira","Trello","ClickUp","Basecamp","Wrike","Smartsheet","Microsoft Project","Other (type)..."],
+    "Digital_Signature": ["None","DocuSign","Adobe Sign","HelloSign","PandaDoc","SignNow","Zoho Sign","OneSpan","Other (type)..."],
+    "Note_Taking": ["None","Notion","Evernote","Microsoft OneNote","Obsidian","Bear","Coda","Confluence","Slite","Other (type)..."],
+    "LMS_Hosting": ["None","Teachable","Thinkific","Moodle","Canvas LMS","Blackboard","TalentLMS","Docebo","LearnDash","Other (type)..."],
+    "Monitoring_Scanning_Endpoint_Security": ["None","CrowdStrike","SentinelOne","Carbon Black","Sophos","Malwarebytes","ESET","Qualys","Rapid7","Tenable","Other (type)..."],
+    "Off_Site_Storage_Backup": ["None","Veeam","Acronis","Backblaze","Carbonite","Datto","AWS Backup","Azure Backup","Wasabi","CrashPlan","Other (type)..."],
+    "Annual_Security_Risk_Assessment": ["None","KnowBe4","Coalfire","Rapid7","Qualys","Trustwave","A-LIGN","Schellman","Sterling","Other (type)..."],
+    "Policy_Management": ["None","PowerDMS","PolicyTech","ConvergePoint","LogicGate","ZenGRC","Hyperproof","Drata","Vanta","Other (type)..."],
+    "Annual_Cybersecurity_Awareness_Training": ["None","KnowBe4","Proofpoint","SANS Security Awareness","Cofense","Infosec IQ","Ninjio","Curricula","Other (type)..."],
+    "AI_Chat": ["None","ChatGPT / OpenAI","Claude / Anthropic","Google Gemini","Microsoft Copilot","Perplexity","Jasper","Copy.ai","Other (type)..."],
+    "Hosted_Web_Design_Toolkit": ["None","Webflow","WordPress","Wix","Squarespace","Shopify","Framer","Cargo","Other (type)..."],
+    "UI_UX_Design": ["None","Figma","Adobe XD","Sketch","InVision","Canva","Framer","Axure","Marvel","Other (type)..."],
+    "Tiered_Customer_Support": ["None","Zendesk","Freshdesk","Intercom","Help Scout","Salesforce Service Cloud","HubSpot Service Hub","Zoho Desk","LiveAgent","Other (type)..."]
+  };
+
+  const CATEGORIES = Object.keys(CATEGORY_VENDORS);
 
   const STORAGE_KEY = "softwareCostAnalysisTool.v2";
 
@@ -467,25 +603,29 @@
     return s;
   }
 
-  function makeRow(data={}){
+  function makeRow(categoryKey, data={}){
     const row = document.createElement("div");
     row.className = "row";
 
-    // Category
-    const cat = makeSelect(CATEGORIES, data.category || CATEGORIES[0]);
-    cat.title = cat.value;
-    cat.addEventListener("change", () => { cat.title = cat.value; recalcRow(row); recalcAll(); });
+    // Category (static label)
+    const catLabel = document.createElement("div");
+    catLabel.className = "cat-label";
+    catLabel.textContent = categoryKey;
 
-    // Vendor + other input
+    // Hidden field to track category value
+    const cat = { value: categoryKey };
+
+    // Vendor + other input (category-specific vendors)
     const vendorWrap = document.createElement("div");
     vendorWrap.className = "vendorwrap";
 
-    const vendor = makeSelect(VENDORS, data.vendor || "Other (type)...");
+    const vendorOptions = CATEGORY_VENDORS[categoryKey] || ["None","Other (type)..."];
+    const vendor = makeSelect(vendorOptions, data.vendor || "None");
     vendor.title = vendor.value;
 
     const other = document.createElement("input");
     other.type = "text";
-    other.placeholder = "Type vendor/app…";
+    other.placeholder = "Type vendor/app...";
     other.className = "otherInput";
     other.value = data.otherVendor || "";
     other.addEventListener("input", () => { recalcRow(row); recalcAll(); });
@@ -501,7 +641,7 @@
     vendorWrap.appendChild(vendor);
     vendorWrap.appendChild(other);
 
-    // Price month (text to avoid spinners; we parse it)
+    // Price month
     const pm = document.createElement("input");
     pm.type = "text";
     pm.inputMode = "decimal";
@@ -509,7 +649,7 @@
     pm.value = data.priceMonth ?? "";
     pm.addEventListener("input", () => { recalcRow(row); recalcAll(); });
 
-    // Users (text to avoid spinners; we parse it)
+    // Users
     const users = document.createElement("input");
     users.type = "text";
     users.inputMode = "numeric";
@@ -524,29 +664,17 @@
 
     // Notes
     const notes = document.createElement("textarea");
-    notes.placeholder = "Notes…";
+    notes.placeholder = "Notes...";
     notes.value = data.notes || "";
-
-    // Remove
-    const x = document.createElement("div");
-    x.className = "xbtn";
-    x.textContent = "×";
-    x.title = "Remove row";
-    x.addEventListener("click", () => {
-      row.remove();
-      recalcAll();
-      updateMeta();
-    });
 
     row._fields = { cat, vendor, other, pm, users, total, notes };
 
-    row.appendChild(cat);
+    row.appendChild(catLabel);
     row.appendChild(vendorWrap);
     row.appendChild(pm);
     row.appendChild(users);
     row.appendChild(total);
     row.appendChild(notes);
-    row.appendChild(x);
 
     recalcRow(row);
     return row;
@@ -555,9 +683,8 @@
   // --- calculations ---
   // Total App Cost is annualized: priceMonth * users * 12
   function recalcRow(row){
-    const { cat, vendor, other, pm, users, total } = row._fields;
+    const { vendor, other, pm, users, total } = row._fields;
 
-    cat.title = cat.value;
     vendor.title = (vendor.value === "Other (type)...")
       ? (other.value || vendor.value)
       : vendor.value;
@@ -580,10 +707,204 @@
       grand += r._annualized || 0;
     }
     $("#grandTotal").textContent = money(grand);
+    updateSummary();
+    updateCharts();
   }
 
   function updateMeta(){
     $("#rowCount").textContent = String($$("#rows .row").length);
+  }
+
+  // --- Filter / Search ---
+  function applyFilter(){
+    const query = ($("#searchInput").value || "").toLowerCase();
+    const catFilter = $("#filterCategory").value;
+    const rows = $$("#rows .row");
+    for (const r of rows){
+      const f = r._fields;
+      const catValue = f.cat.value;
+      const vendorText = f.vendor.value === "Other (type)..." ? f.other.value : f.vendor.value;
+      const text = [catValue, vendorText, f.notes.value].join(" ").toLowerCase();
+      const matchSearch = !query || text.includes(query);
+      const matchCat = !catFilter || catValue === catFilter;
+      r.style.display = (matchSearch && matchCat) ? "" : "none";
+    }
+  }
+
+  function populateFilterCategories(){
+    const sel = $("#filterCategory");
+    const current = sel.value;
+    sel.innerHTML = '<option value="">All Categories</option>';
+    for (const cat of CATEGORIES){
+      const o = document.createElement("option");
+      o.value = cat;
+      o.textContent = cat;
+      sel.appendChild(o);
+    }
+    sel.value = current;
+  }
+
+  // --- Summary Statistics ---
+  function updateSummary(){
+    const rows = $$("#rows .row");
+    let totalAnnual = 0;
+    let totalUsers = 0;
+    let activeCount = 0;
+    const catSpend = {};
+
+    for (const r of rows){
+      const f = r._fields;
+      const ann = r._annualized || 0;
+      const u = num(String(f.users.value).replace(/[^0-9.]/g,""));
+      totalAnnual += ann;
+      totalUsers += u;
+      if (ann > 0) activeCount++;
+      const cat = f.cat.value;
+      catSpend[cat] = (catSpend[cat] || 0) + ann;
+    }
+
+    $("#sumMonthly").textContent = money(totalAnnual / 12);
+    $("#sumAvgUser").textContent = totalUsers > 0 ? money((totalAnnual / 12) / totalUsers) : "$0.00";
+    $("#sumActiveCount").textContent = String(activeCount);
+
+    let topCat = "--";
+    let topAmt = 0;
+    for (const [cat, amt] of Object.entries(catSpend)){
+      if (amt > topAmt){ topAmt = amt; topCat = cat; }
+    }
+    $("#sumTopCat").textContent = topCat;
+    $("#sumTopCatAmt").textContent = topAmt > 0 ? money(topAmt) + " / year" : "";
+  }
+
+  // --- Charts ---
+  function updateCharts(){
+    drawPieChart();
+    drawBarChart();
+  }
+
+  function drawPieChart(){
+    const canvas = $("#pieChart");
+    const ctx = canvas.getContext("2d");
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, rect.width, rect.height);
+
+    const rows = $$("#rows .row");
+    const catSpend = {};
+    for (const r of rows){
+      const cat = r._fields.cat.value;
+      const ann = r._annualized || 0;
+      if (ann > 0) catSpend[cat] = (catSpend[cat] || 0) + ann;
+    }
+
+    const entries = Object.entries(catSpend).sort((a,b) => b[1] - a[1]);
+    const total = entries.reduce((s, e) => s + e[1], 0);
+    const legendEl = $("#pieLegend");
+    legendEl.innerHTML = "";
+
+    if (total === 0){
+      ctx.fillStyle = "rgba(255,255,255,.15)";
+      ctx.font = "14px " + getComputedStyle(document.body).fontFamily;
+      ctx.textAlign = "center";
+      ctx.fillText("No data to display", rect.width/2, rect.height/2);
+      return;
+    }
+
+    const cx = rect.width * 0.4;
+    const cy = rect.height / 2;
+    const radius = Math.min(cx, cy) - 10;
+    let startAngle = -Math.PI / 2;
+
+    entries.forEach(([cat, amt], i) => {
+      const slice = (amt / total) * Math.PI * 2;
+      const color = CHART_COLORS[i % CHART_COLORS.length];
+
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, radius, startAngle, startAngle + slice);
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+
+      startAngle += slice;
+
+      const item = document.createElement("div");
+      item.className = "chart-legend-item";
+      const pct = ((amt / total) * 100).toFixed(1);
+      item.innerHTML = `<span class="swatch" style="background:${color}"></span>${cat} (${pct}%)`;
+      legendEl.appendChild(item);
+    });
+  }
+
+  function drawBarChart(){
+    const canvas = $("#barChart");
+    const ctx = canvas.getContext("2d");
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, rect.width, rect.height);
+
+    const rows = $$("#rows .row");
+    const items = [];
+    for (const r of rows){
+      const f = r._fields;
+      const ann = r._annualized || 0;
+      if (ann > 0){
+        const vendorText = f.vendor.value === "Other (type)..." ? (f.other.value || "Other") : f.vendor.value;
+        items.push({ label: f.cat.value + " - " + vendorText, value: ann });
+      }
+    }
+    items.sort((a,b) => b.value - a.value);
+    const top = items.slice(0, 10);
+
+    if (top.length === 0){
+      ctx.fillStyle = "rgba(255,255,255,.15)";
+      ctx.font = "14px " + getComputedStyle(document.body).fontFamily;
+      ctx.textAlign = "center";
+      ctx.fillText("No data to display", rect.width/2, rect.height/2);
+      return;
+    }
+
+    const maxVal = top[0].value;
+    const leftMargin = 12;
+    const rightMargin = 80;
+    const topMargin = 8;
+    const barHeight = Math.min(22, (rect.height - topMargin) / top.length - 6);
+    const barGap = 4;
+    const barAreaWidth = rect.width - leftMargin - rightMargin;
+
+    ctx.font = "11px " + getComputedStyle(document.body).fontFamily;
+    ctx.textBaseline = "middle";
+
+    top.forEach((item, i) => {
+      const y = topMargin + i * (barHeight + barGap);
+      const w = (item.value / maxVal) * barAreaWidth;
+      const color = CHART_COLORS[i % CHART_COLORS.length];
+
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.roundRect(leftMargin, y, Math.max(w, 4), barHeight, 4);
+      ctx.fill();
+
+      ctx.fillStyle = "rgba(255,255,255,.82)";
+      ctx.textAlign = "left";
+      ctx.fillText(money(item.value), leftMargin + w + 6, y + barHeight / 2);
+
+      // label truncated
+      const maxLabelW = barAreaWidth * 0.45;
+      let label = item.label;
+      while (ctx.measureText(label).width > maxLabelW && label.length > 3){
+        label = label.slice(0, -4) + "...";
+      }
+      ctx.fillStyle = "rgba(255,255,255,.55)";
+      ctx.textAlign = "left";
+      ctx.fillText(label, leftMargin + 6, y + barHeight / 2);
+    });
   }
 
   // --- persistence ---
@@ -604,8 +925,14 @@
   function loadData(items){
     const container = $("#rows");
     container.innerHTML = "";
+    // Build a lookup from category to saved data
+    const dataMap = {};
     for (const item of items){
-      container.appendChild(makeRow(item));
+      dataMap[item.category] = item;
+    }
+    // Create one row per category, using saved data if available
+    for (const cat of CATEGORIES){
+      container.appendChild(makeRow(cat, dataMap[cat] || {}));
     }
     recalcAll();
     updateMeta();
@@ -628,8 +955,9 @@
   function clearAll(){
     if (!confirm("Clear all rows?")) return;
     localStorage.removeItem(STORAGE_KEY);
-    $("#rows").innerHTML = "";
-    for (let i=0;i<8;i++) $("#rows").appendChild(makeRow({}));
+    const container = $("#rows");
+    container.innerHTML = "";
+    for (const cat of CATEGORIES) container.appendChild(makeRow(cat, {}));
     recalcAll();
     updateMeta();
     $("#lastSaved").textContent = "—";
@@ -642,7 +970,7 @@
     const lines = [header.join(",")];
 
     for (const r of rows){
-      const vendorName = r.vendor === "Other (type)..." ? (r.otherVendor || "") : r.vendor;
+      const vendorName = (r.vendor === "Other (type)..." || r.vendor === "None") ? (r.otherVendor || r.vendor) : r.vendor;
       const annualized = num(String(r.priceMonth).replace(/[^0-9.]/g,"")) * num(String(r.users).replace(/[^0-9.]/g,"")) * 12;
 
       const safeNotes = (r.notes || "").replaceAll('"','""');
@@ -707,12 +1035,14 @@
     const out = [];
     for (let i=1;i<lines.length;i++){
       const cols = splitLine(lines[i]);
+      const catText = (cols[idx.cat] || CATEGORIES[0]).trim();
       const vendorText = (cols[idx.vendor] || "").trim();
-      const vendorIsKnown = VENDORS.includes(vendorText);
-      const useOther = (!vendorIsKnown && vendorText !== "") ? "Other (type)..." : (vendorText || "Other (type)...");
+      const catVendors = CATEGORY_VENDORS[catText] || [];
+      const vendorIsKnown = catVendors.includes(vendorText);
+      const useOther = (!vendorIsKnown && vendorText !== "") ? "Other (type)..." : (vendorText || "None");
 
       out.push({
-        category: (cols[idx.cat] || CATEGORIES[0]).trim(),
+        category: catText,
         vendor: useOther,
         otherVendor: (useOther === "Other (type)...") ? vendorText : "",
         priceMonth: (cols[idx.pm] || "").trim(),
@@ -725,15 +1055,14 @@
 
   // --- init ---
   const rowsEl = $("#rows");
-  for (let i=0;i<8;i++) rowsEl.appendChild(makeRow({}));
+  for (const cat of CATEGORIES) rowsEl.appendChild(makeRow(cat, {}));
   recalcAll();
   updateMeta();
+  populateFilterCategories();
 
-  $("#addRowBtn").addEventListener("click", () => {
-    rowsEl.appendChild(makeRow({}));
-    recalcAll();
-    updateMeta();
-  });
+  // Filter / Search
+  $("#searchInput").addEventListener("input", () => applyFilter());
+  $("#filterCategory").addEventListener("change", () => applyFilter());
 
   $("#saveBtn").addEventListener("click", () => save());
   $("#loadBtn").addEventListener("click", () => { load(); recalcAll(); updateMeta(); });
@@ -764,6 +1093,9 @@
       updateMeta();
     }, 400);
   });
+
+  // Redraw charts on resize
+  window.addEventListener("resize", () => updateCharts());
 })();
 </script>
 </body>
