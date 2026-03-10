@@ -391,11 +391,138 @@
     /* Print/PDF */
     @media print{
       body{ background:#fff; color:#000; padding:0; }
-      header, .actions, .note, .filterbar, .summary-grid, .chart-section{ display:none !important; }
+      header, .actions, .note, .filterbar, .summary-grid, .chart-section, .vs-section{ display:none !important; }
       .card{ box-shadow:none; border:1px solid #ddd; }
       .row{ break-inside:avoid; }
       select, input, textarea{ border:1px solid #ddd; background:#fff; color:#1a2744; }
       .totalCell .sub{ color:#2c5282; }
+    }
+    /* --- Vector Stack Comparison --- */
+    .vs-section{
+      margin-top:16px;
+    }
+    .vs-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      flex-wrap:wrap;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .vs-title{
+      font-size:22px;
+      font-weight:800;
+      letter-spacing:.2px;
+    }
+    .vs-toggle{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .vs-toggle-label{
+      font-size:14px;
+      color:var(--muted);
+      font-weight:600;
+    }
+    .vs-tab{
+      padding:9px 18px;
+      border-radius:12px;
+      font-size:14px;
+      font-weight:600;
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--muted);
+      cursor:pointer;
+      transition: background .12s, color .12s, border-color .12s;
+    }
+    .vs-tab.active{
+      background:var(--accent);
+      color:#fff;
+      border-color:var(--accent);
+    }
+    .vs-tab:hover:not(.active){
+      border-color:var(--accent);
+      background:#f8fafd;
+    }
+    .vs-cards{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:14px;
+    }
+    @media (max-width:768px){
+      .vs-cards{ grid-template-columns:1fr; }
+    }
+    .vs-card-accent{
+      border-color:var(--accent);
+      background:var(--accent-light);
+    }
+    .vs-card-accent .sc-value{
+      color:var(--accent);
+    }
+    .vs-card-savings .sc-value{
+      color:#16a34a;
+    }
+    .vs-card-savings .sc-sub{
+      color:#16a34a;
+      font-weight:700;
+    }
+    .vs-detail{
+      margin-top:10px;
+      font-size:14px;
+      color:var(--muted);
+      line-height:1.6;
+    }
+    .vs-detail .vs-line{
+      display:flex;
+      justify-content:space-between;
+      padding:2px 0;
+    }
+    .vs-detail .vs-line-val{
+      font-weight:700;
+      font-variant-numeric:tabular-nums;
+    }
+    .vs-breakdown{
+      margin-top:14px;
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:18px 20px;
+      box-shadow:var(--shadow);
+      font-size:14px;
+      color:var(--muted);
+      line-height:1.6;
+    }
+    .vs-breakdown:empty{
+      display:none;
+    }
+    .vs-breakdown .vs-bk-title{
+      font-weight:800;
+      color:var(--text);
+      margin-bottom:8px;
+      font-size:16px;
+    }
+    .vs-breakdown .vs-bk-row{
+      display:flex;
+      justify-content:space-between;
+      padding:4px 0;
+      border-bottom:1px solid var(--line);
+    }
+    .vs-breakdown .vs-bk-row:last-child{
+      border-bottom:none;
+    }
+    .vs-bk-row .vs-bk-pkg{
+      font-weight:600;
+      color:var(--text);
+    }
+    .vs-bk-row .vs-bk-cost{
+      font-weight:700;
+      font-variant-numeric:tabular-nums;
+    }
+    .vs-bk-discount{
+      margin-top:6px;
+      font-size:14px;
+      color:var(--accent);
+      font-weight:600;
     }
   </style>
 </head>
@@ -505,6 +632,42 @@
       <div class="chart-title">Top 10 Costs (Annualized)</div>
       <canvas id="barChart" width="400" height="300"></canvas>
     </div>
+  </div>
+
+  <!-- Vector Stack Comparison -->
+  <div class="vs-section" id="vsSection">
+    <div class="vs-header">
+      <div class="vs-title">VectorStack&trade; Cost Comparison</div>
+      <div class="vs-toggle">
+        <span class="vs-toggle-label">Pricing Model:</span>
+        <button id="vsManagedBtn" class="vs-tab active">Managed Plan</button>
+        <button id="vsModularBtn" class="vs-tab">Modular</button>
+      </div>
+    </div>
+
+    <div class="vs-cards">
+      <div class="summary-card">
+        <div class="sc-label">Your Current Spend</div>
+        <div class="sc-value" id="vsCurrentAnnual">$0.00</div>
+        <div class="sc-sub">annualized from grid above</div>
+        <div class="vs-detail" id="vsCurrentDetail"></div>
+      </div>
+
+      <div class="summary-card vs-card-accent">
+        <div class="sc-label">VectorStack Cost</div>
+        <div class="sc-value" id="vsVectorAnnual">$0.00</div>
+        <div class="sc-sub" id="vsVectorSub">Managed Plan</div>
+        <div class="vs-detail" id="vsVectorDetail"></div>
+      </div>
+
+      <div class="summary-card vs-card-savings">
+        <div class="sc-label">Potential Savings</div>
+        <div class="sc-value" id="vsSavingsAmt">$0.00</div>
+        <div class="sc-sub" id="vsSavingsPct">0% change</div>
+      </div>
+    </div>
+
+    <div class="vs-breakdown" id="vsBreakdown"></div>
   </div>
 
   <div class="note">
@@ -706,6 +869,7 @@
     $("#grandTotal").textContent = money(grand);
     updateSummary();
     updateCharts();
+    updateVectorComparison();
   }
 
   function updateMeta(){
@@ -1050,12 +1214,172 @@
     return out;
   }
 
+  // --- Vector Stack Comparison ---
+  const VS_PACKAGE_MAP = {
+    "Identity & Access Management": [
+      "SSO_Authentication","Password_Manager","Zero_Trust_VPN"
+    ],
+    "Productivity & Collaboration": [
+      "Cloud_Workspace","Office_Suite","Mail_Calander",
+      "Messaging_and_Video_Conferencing","PDF_Utility","PM_Tool",
+      "Note_Taking","Digital_Signature"
+    ],
+    "Business Operations": ["CRM","ERP","LMS_Hosting"],
+    "Security & Monitoring": [
+      "Monitoring_Scanning_Endpoint_Security","Off_Site_Storage_Backup"
+    ]
+  };
+
+  const VS_MODULAR_PRICE = {
+    "Identity & Access Management": 12,
+    "Productivity & Collaboration": 20,
+    "Business Operations": 18,
+    "Security & Monitoring": 14,
+    "Support": 10
+  };
+
+  let vsPricingMode = "managed";
+
+  function getVSMaxUsers(){
+    let maxU = 0;
+    for (const r of $$("#rows .row")){
+      const u = num(String(r._fields.users.value).replace(/[^0-9.]/g,""));
+      if (u > maxU) maxU = u;
+    }
+    return maxU;
+  }
+
+  function getVSActivePackages(){
+    const activeCats = new Set();
+    for (const r of $$("#rows .row")){
+      if ((r._annualized || 0) > 0) activeCats.add(r._fields.cat.value);
+    }
+    const pkgs = [];
+    for (const [pkg, cats] of Object.entries(VS_PACKAGE_MAP)){
+      if (cats.some(c => activeCats.has(c))) pkgs.push(pkg);
+    }
+    return pkgs;
+  }
+
+  function calcVSManaged(users){
+    if (users <= 0) return { annual: 0, perUser: 0, tier: "N/A" };
+    let perUser, tier;
+    if (users <= 25){ perUser = 60; tier = "Essentials (1\u201325 users)"; }
+    else if (users <= 100){ perUser = 75; tier = "Professional (26\u2013100 users)"; }
+    else { perUser = 90; tier = "Enterprise (100+ users)"; }
+    return { annual: perUser * users * 12, perUser, tier };
+  }
+
+  function calcVSModular(users, activePackages){
+    if (users <= 0 || activePackages.length === 0)
+      return { annual: 0, packages: [], discount: false, effectiveUsers: 0 };
+    const effectiveUsers = Math.max(users, 5);
+    const discount = activePackages.length >= 2;
+    const packages = [];
+    let subtotal = 0;
+    for (const pkg of activePackages){
+      const rate = VS_MODULAR_PRICE[pkg];
+      const cost = rate * effectiveUsers * 12;
+      packages.push({ name: pkg, rate, annual: cost });
+      subtotal += cost;
+    }
+    const discountAmt = discount ? subtotal * 0.10 : 0;
+    return { annual: subtotal - discountAmt, packages, discount, discountAmt, subtotal, effectiveUsers };
+  }
+
+  function updateVectorComparison(){
+    let grand = 0;
+    for (const r of $$("#rows .row")) grand += r._annualized || 0;
+    const users = getVSMaxUsers();
+    const activePackages = getVSActivePackages();
+
+    // Current spend card
+    $("#vsCurrentAnnual").textContent = money(grand);
+    $("#vsCurrentDetail").innerHTML =
+      `<div class="vs-line"><span>Unique users (max):</span><span class="vs-line-val">${users}</span></div>` +
+      `<div class="vs-line"><span>Monthly total:</span><span class="vs-line-val">${money(grand / 12)}</span></div>`;
+
+    let vsAnnual = 0;
+
+    if (vsPricingMode === "managed"){
+      const m = calcVSManaged(users);
+      vsAnnual = m.annual;
+      $("#vsVectorSub").textContent = "Managed Plan";
+      $("#vsVectorDetail").innerHTML =
+        `<div class="vs-line"><span>Tier:</span><span class="vs-line-val">${m.tier}</span></div>` +
+        `<div class="vs-line"><span>Per user/mo:</span><span class="vs-line-val">${money(m.perUser)}</span></div>` +
+        `<div class="vs-line"><span>Users:</span><span class="vs-line-val">${users}</span></div>`;
+      $("#vsBreakdown").innerHTML =
+        `<div class="vs-bk-title">Managed Plan Breakdown</div>` +
+        `<div class="vs-bk-row"><span class="vs-bk-pkg">${m.tier}</span>` +
+        `<span class="vs-bk-cost">${money(m.perUser)}/user/mo &times; ${users} users &times; 12 mo = ${money(m.annual)}/yr</span></div>` +
+        `<p style="margin:10px 0 0;font-size:14px;color:var(--muted);">` +
+        `Includes all packages: Identity &amp; Access, Productivity &amp; Collaboration, Business Operations, Security &amp; Monitoring, and Support.</p>`;
+    } else {
+      const mod = calcVSModular(users, activePackages);
+      vsAnnual = mod.annual;
+      $("#vsVectorSub").textContent = "Modular Packages";
+      let detail =
+        `<div class="vs-line"><span>Users (min 5):</span><span class="vs-line-val">${mod.effectiveUsers}</span></div>` +
+        `<div class="vs-line"><span>Packages matched:</span><span class="vs-line-val">${activePackages.length}</span></div>`;
+      if (mod.discount)
+        detail += `<div class="vs-line"><span>Multi-pkg discount:</span><span class="vs-line-val" style="color:#16a34a">&minus;10%</span></div>`;
+      $("#vsVectorDetail").innerHTML = detail;
+
+      let rows = mod.packages.map(p =>
+        `<div class="vs-bk-row"><span class="vs-bk-pkg">${p.name}</span>` +
+        `<span class="vs-bk-cost">$${p.rate}/user/mo &times; ${mod.effectiveUsers} users &times; 12 mo = ${money(p.annual)}/yr</span></div>`
+      ).join("");
+      let disc = mod.discount
+        ? `<div class="vs-bk-discount">10% multi-package discount (2+ packages): &minus;${money(mod.discountAmt)}</div>` : "";
+      $("#vsBreakdown").innerHTML =
+        `<div class="vs-bk-title">Modular Packages Breakdown</div>${rows}${disc}` +
+        `<div class="vs-bk-row" style="border-top:2px solid var(--line);margin-top:8px;padding-top:8px;font-weight:800;color:var(--text);">` +
+        `<span>Total</span><span>${money(mod.annual)}/year</span></div>` +
+        (activePackages.length === 0
+          ? `<p style="margin:10px 0 0;font-size:14px;color:var(--muted);">Enter cost data above to see which modular packages apply.</p>` : "");
+    }
+
+    $("#vsVectorAnnual").textContent = money(vsAnnual);
+
+    // Savings
+    const savings = grand - vsAnnual;
+    const pct = grand > 0 ? ((savings / grand) * 100).toFixed(1) : "0.0";
+    $("#vsSavingsAmt").textContent = money(savings);
+    const pctEl = $("#vsSavingsPct");
+    const amtEl = $("#vsSavingsAmt");
+    if (savings > 0){
+      pctEl.textContent = `${pct}% reduction`;
+      pctEl.style.color = amtEl.style.color = "#16a34a";
+    } else if (savings < 0){
+      pctEl.textContent = `${Math.abs(pct)}% increase`;
+      pctEl.style.color = amtEl.style.color = "#dc2626";
+    } else {
+      pctEl.textContent = "Enter data above to compare";
+      pctEl.style.color = amtEl.style.color = "var(--muted)";
+    }
+  }
+
   // --- init ---
   const rowsEl = $("#rows");
   for (const cat of CATEGORIES) rowsEl.appendChild(makeRow(cat, {}));
   recalcAll();
   updateMeta();
   populateFilterCategories();
+
+  // Vector Stack toggle
+  $("#vsManagedBtn").addEventListener("click", () => {
+    vsPricingMode = "managed";
+    $("#vsManagedBtn").classList.add("active");
+    $("#vsModularBtn").classList.remove("active");
+    updateVectorComparison();
+  });
+  $("#vsModularBtn").addEventListener("click", () => {
+    vsPricingMode = "modular";
+    $("#vsModularBtn").classList.add("active");
+    $("#vsManagedBtn").classList.remove("active");
+    updateVectorComparison();
+  });
 
   // Filter / Search
   $("#searchInput").addEventListener("input", () => applyFilter());
